@@ -1,24 +1,14 @@
-{% extends "base.jinja" %}
+{% extends "profile.jinja" %}
 
-{% block title %}{{ _("Volunteer Details") }}{% endblock %}
-
-
-{% block content %}
-<div class="container mt-2">
-    <section>
-        <h2>{{ _("Personal Information") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>{{ _("First name:") }}</strong> {{ volunteer.first_name }}</li>
-            <li class="list-group-item"><strong>{{ _("Last name:") }}</strong> {{ volunteer.last_name }}</li>
-            <li class="list-group-item"><strong>{{ _("Email:") }}</strong> {{ volunteer.email }}</li>
-            <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ volunteer.phone }}</li>
-            <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ volunteer.address.voivodeship }}
-            <li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ volunteer.address.city }}</li>
-            <li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ volunteer.address.street }}</li>
-            <li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
-                {{ volunteer.address.street_number }}
-            </li>
-        </ul>
-    </section>
-</div>
+{% block specific_user %}
+<li class="list-group-item"><strong>{{ _("First name:") }}</strong> {{ volunteer.first_name }}</li>
+<li class="list-group-item"><strong>{{ _("Last name:") }}</strong> {{ volunteer.last_name }}</li>
+<li class="list-group-item"><strong>{{ _("Email:") }}</strong> {{ volunteer.email }}</li>
+<li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ volunteer.phone }}</li>
+<li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ volunteer.address.voivodeship }}
+<li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ volunteer.address.city }}</li>
+<li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ volunteer.address.street }}</li>
+<li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
+    {{ volunteer.address.street_number }}
+</li>
 {% endblock %}

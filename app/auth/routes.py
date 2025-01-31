@@ -183,7 +183,7 @@ def login():
 
 
 @bp.route('/setup-totp', methods=['GET', 'POST'])
-@roles_required(['donor'])
+@roles_required(['donor', 'authorities', 'organization', 'affected', 'volunteer'])
 def setup_totp():
     if current_user.totp_secret:
         flash('TOTP is already set up.', 'info')

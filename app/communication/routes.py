@@ -1,7 +1,7 @@
 from flask import (Blueprint, jsonify, redirect, render_template, request,
                    url_for)
-from flask_login import current_user
-from sqlalchemy import or_
+from flask_login import current_user, login_required
+from sqlalchemy import or_, and_
 
 from app.extensions import db
 from app.models.message import Message
@@ -13,31 +13,23 @@ bp = Blueprint('chat', __name__,
                static_url_path='communication')
 
 
-@bp.route('/')
-def index():
-    users = User.query.all()
-    return render_template('communication/chat.html', users=users)
-
-
 @bp.route('/chat')
+@login_required
 def chat():
-    if not current_user.is_authenticated:
-        return redirect(url_for('auth.login'))
-    user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.get(current_user.id)
     if not user:
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
 
-    # Znajdź wszystkich użytkowników, z którymi dany użytkownik prowadził rozmowy
-    chat_users = db.session.query(User).join(
-        Message,
-        or_(Message.sender_id == User.id, Message.receiver_id == User.id)
-    ).filter(
+    subquery = db.session.query(Message.sender_id, Message.receiver_id).filter(
         or_(Message.sender_id == user.id, Message.receiver_id == user.id)
+    ).distinct().subquery()
+
+    chat_users = db.session.query(User).filter(
+        or_(User.id == subquery.c.sender_id, User.id == subquery.c.receiver_id),
+        User.id != user.id
     ).distinct().all()
 
-    chat_users = [u for u in chat_users if u.email != current_user.email]
-
-    return render_template('communication/chat.html', user=user, chat_users=chat_users)
+    return render_template('communication/chat.jinja', user=user, chat_users=chat_users)
 
 
 @bp.route('/search_users')
@@ -49,7 +41,6 @@ def search_users():
         User.email.ilike(f'%{query}%'),
         User.email != current_email
     ).all()
-
     return jsonify([{'email': user.email} for user in users])
 
 
@@ -66,13 +57,21 @@ def get_messages():
 
     messages = Message.query.filter(
         or_(
-            (Message.sender_id == sender.id) & (Message.receiver_id == receiver.id),
-            (Message.sender_id == receiver.id) & (Message.receiver_id == sender.id)
+            and_(Message.sender_id == sender.id, Message.receiver_id == receiver.id),
+            and_(Message.sender_id == receiver.id, Message.receiver_id == sender.id)
         )
     ).order_by(Message.timestamp).all()
 
     return jsonify([{
         'sender': message.sender.email,
+        'sender_profile_picture': message.sender.profile_picture,
         'content': message.content,
         'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
     } for message in messages])
+
+
+@bp.route('/get_all_users')
+def get_all_users():
+    current_email = request.args.get('current_email')
+    users = User.query.filter(User.email != current_email).all()
+    return jsonify([{'email': user.email} for user in users])

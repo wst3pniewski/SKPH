@@ -1,29 +1,19 @@
-{% extends "base.jinja" %}
+{% extends "profile.jinja" %}
 
-{% block title %}{{ _("Authorities Details") }}{% endblock %}
-
-
-{% block content %}
-<div class="container mt-2">
-    <section>
-        <h2>{{ _("Personal Information") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ authorities.name }}</li>
-            <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ authorities.phone }}</li>
-            <li class="list-group-item"><strong>{{ _("Approved:") }}</strong>
-                {% if authorities.approved %}
-                <span class="badge badge-success">{{ _("Approved") }}</span>
-                {% else %}
-                <span class="badge badge-warning">{{ _("Not approved") }}</span>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ authorities.address.voivodeship }}
-            <li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ authorities.address.city }}</li>
-            <li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ authorities.address.street }}</li>
-            <li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
-                {{authorities.address.street_number}}
-            </li>
-        </ul>
-    </section>
-</div>
+{% block specific_user %}
+<li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ authorities.name }}</li>
+<li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ authorities.phone }}</li>
+<li class="list-group-item"><strong>{{ _("Approved:") }}</strong>
+    {% if authorities.approved %}
+    <span class="badge badge-success">{{ _("Approved") }}</span>
+    {% else %}
+    <span class="badge badge-warning">{{ _("Not approved") }}</span>
+    {% endif %}
+</li>
+<li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ authorities.address.voivodeship }}
+<li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ authorities.address.city }}</li>
+<li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ authorities.address.street }}</li>
+<li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
+    {{authorities.address.street_number}}
+</li>
 {% endblock %}

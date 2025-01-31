@@ -1,0 +1,156 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Chat") }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div>
+    <h2>{{ _("Find a user") }}</h2>
+    <input type="text" id="search-users" placeholder="{{ _('Search') }}">
+    <hr>
+    <ul id="user-list" class="list-group" style="display: none;"></ul>
+  </div>
+
+  <h2>{{ _("Your existing chats:") }}</h2>
+  <ul class="list-group">
+    {% for chat_user in chat_users %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ chat_user.email }}
+      <button class="btn btn-primary btn-sm start-chat" data-email="{{ chat_user.email }}">{{ _("Start Chat")
+        }}</button>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <br>
+
+  <div id="chat-area" style="display: none;">
+    <h2>{{ _("Chat with ") }}<span id="current-chat-user"></span></h2>
+    <div id="messages" class="mb-3" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    </div>
+    <div class="input-group">
+      <input type="text" id="message-input" class="form-control" placeholder="{{ _('Type a message') }}">
+      <button id="send-message" class="btn btn-primary ml-2">{{ _("Send") }}</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block ascript %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+
+<script>
+  $(document).ready(function () {
+    const socket = io();
+    const email = "{{ user.email if user else '' }}"; // Ensuring user.email exists
+
+    function joinRoom(receiver) {
+      socket.emit('join', { email: email, receiver: receiver });
+    }
+
+    $('#search-users').on('input', function () {
+      const query = $(this).val().trim();
+      const userList = $('#user-list');
+
+      if (!query) {
+        userList.empty().hide(); // Hide user list if input is empty
+        return;
+      }
+
+      $.get('/communication/search_users', { query: query, current_email: email })
+        .done(function (users) {
+          userList.empty();
+          if (Array.isArray(users) && users.length > 0) {
+            users.forEach(user => {
+              userList.append(
+                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                  ${user.email}
+                  <button class="btn btn-primary btn-sm start-chat" data-email="${user.email}">{{ _("Start Chat") }}</button>
+                </li>`
+              );
+            });
+            userList.show();
+          } else {
+            userList.append(`<li class="list-group-item">{{ _("No users found") }}</li>`).show();
+          }
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+          console.error("{{ _('Error fetching users:') }}", textStatus, errorThrown);
+          userList.empty().append(`<li class="list-group-item text-danger">{{ _("Error loading users") }}</li>`).show();
+        });
+    });
+
+    $(document).on('click', '.start-chat', function () {
+      const selectedUser = $(this).data('email');
+      $('#current-chat-user').text(selectedUser);
+      $('#chat-area').show();
+
+      joinRoom(selectedUser);
+
+      $.get('/communication/get_messages', { sender: email, receiver: selectedUser })
+        .done(function (messages) {
+          const messagesDiv = $('#messages');
+          messagesDiv.empty();
+          messages.forEach(msg => {
+            const profilePicture = msg.sender_profile_picture ? `uploads/${msg.sender_profile_picture}` : 'uploads/base_profile_picture.jpg';
+            messagesDiv.append(
+              `<div class="d-flex align-items-start mb-2">
+                <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-2" width="25" height="25">
+                <div>
+                  <p><strong>${msg.sender}:</strong> ${msg.content} <small>(${msg.timestamp})</small></p>
+                </div>
+              </div>`
+            );
+          });
+          messagesDiv.scrollTop(messagesDiv[0].scrollHeight);
+        })
+        .fail(function () {
+          console.error("{{ _('Error loading messages.') }}");
+        });
+    });
+
+    function sendMessage() {
+      const messageInput = $('#message-input');
+      const message = messageInput.val().trim();
+      const receiver = $('#current-chat-user').text();
+
+      if (!message || !receiver) return;
+
+      socket.emit('send_message', {
+        sender: email,
+        receiver: receiver,
+        message: message
+      });
+
+      messageInput.val('');
+    }
+
+    $('#send-message').click(sendMessage);
+    $('#message-input').keypress(function (e) {
+      if (e.which == 13) { // Enter key
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    socket.on('receive_message', function (data) {
+      const currentChatUser = $('#current-chat-user').text();
+      if (
+        (data.sender === currentChatUser && data.receiver === email) ||
+        (data.sender === email && data.receiver === currentChatUser)
+      ) {
+        const profilePicture = data.sender_profile_picture ? `uploads/${data.sender_profile_picture}` : 'uploads/base_profile_picture.jpg';
+        const formattedMessage = `<div class="d-flex align-items-start mb-2">
+                                    <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-2" width="30" height="30">
+                                    <div>
+                                      <p><strong>${data.sender}:</strong> ${data.message} <small>(${data.timestamp})</small></p>
+                                    </div>
+                                  </div>`;
+        $('#messages').append(formattedMessage);
+        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+      }
+    });
+  });
+</script>
+{% endblock %}
