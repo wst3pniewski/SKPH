@@ -1,0 +1,14 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Berify TOTP") }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ _("Verify Two-Factor Authentication") }}</h1>
+    <form method="POST">
+        <label for="totp_code">{{ _("Enter TOTP Code:") }}</label>
+        <input type="text" id="totp_code" name="totp_code" required>
+        <button type="submit">{{ _("Verify") }}</button>
+    </form>
+</div>
+{% endblock %}

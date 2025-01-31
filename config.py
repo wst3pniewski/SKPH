@@ -4,6 +4,7 @@ import os
 class Config:
     SECRET_KEY = 'secret'
     # os.environ.get('SECRET_KEY')
+    UPLOAD_FOLDER = 'app/static/uploads'
 
     BABEL_TRANSLATION_DIRECTORIES = '../translations'
 

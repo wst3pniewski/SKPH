@@ -1,0 +1,39 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Setup TOTP") }}{% endblock %}
+
+{% block content %}
+<div class="container m-10">
+    <h1>{{ _("Setup Two-Factor Authentication") }}</h1>
+    <p>{{ _("Scan the QR code below using an authenticator app (e.g., Google Authenticator)") }}:</p>
+    <img src="data:image/png;base64,{{ qr_code }}" alt="TOTP QR Code">
+    <p>{{ _("Or manually enter this secret") }}:
+        <strong id="totp_secret">{{ current_user.totp_secret }}</strong>
+        <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard()">
+            <i class="fas fa-copy"></i>
+        </button>
+    </p>
+
+    <form action="{{ url_for('auth.setup_totp') }}" method="post">
+        <div class="form-group">
+            <label for="totp_code">{{ _("Enter TOTP Code") }}</label>
+            <input type="text" class="form-control" id="totp_code" name="totp_code" required>
+        </div>
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">{{ _("Verify And Save") }}</button>
+            <a class="btn btn-secondary" href="{{ url_for('auth.profile') }}">{{ _("Cancel") }}</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function copyToClipboard() {
+        var copyText = document.getElementById("totp_secret").innerText;
+        navigator.clipboard.writeText(copyText).then(function () {
+            alert("Copied to clipboard: " + copyText);
+        }, function (err) {
+            alert("Failed to copy text: ", err);
+        });
+    }
+</script>
+{% endblock %}

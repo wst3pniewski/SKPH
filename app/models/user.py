@@ -1,3 +1,4 @@
+from enum import unique
 from dns.tsig import BadSignature
 from flask import current_app
 from flask_login import UserMixin
@@ -16,6 +17,8 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(256), nullable=False)
     active = db.Column(db.Boolean, default=True)
     type = db.Column(db.Enum(*USER_TYPES, name='user_type'), nullable=False)
+    totp_secret = db.Column(db.String(32), unique=True, nullable=True)
+    profile_picture = db.Column(db.String(256), nullable=True)
 
     volunteer = db.relationship('Volunteer', backref='user', uselist=False)
     organization = db.relationship('Organization', backref='user', uselist=False)

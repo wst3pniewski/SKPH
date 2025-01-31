@@ -32,6 +32,7 @@ def create_app(config_name=None):
     socketio.init_app(flask_app)
 
     with flask_app.app_context():
+        # db.drop_all()
         db.create_all()
 
     # Register blueprints here
