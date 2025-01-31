@@ -1,49 +1,6 @@
 {% extends "profile.jinja" %}
 
-
 {% block specific_user %}
-{# <div class="container mt-2">
-    <section>
-        <h2>{{ _("Personal Information") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <strong>{{ _("Profile Picture:") }}</strong>
-                <img src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
-                    alt="Profile Picture" class="rounded-circle" width="100" height="100">
-                <a href="{{ url_for('auth.setup_profile_picture') }}" class="btn btn-primary btn-sm">
-                    {% if current_user.profile_picture %}
-                    {{ _("Edit Profile Picture") }}
-                    {% else %}
-                    {{ _("Setup Profile Picture") }}
-                    {% endif %}
-                </a>
-                {% if current_user.profile_picture %}
-                <form action="{{ url_for('auth.delete_profile_picture') }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger btn-sm">{{ _("Delete Profile Picture") }}</button>
-                </form>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ donor.name }}</li>
-            <li class="list-group-item"><strong>{{ _("Last name:") }}</strong> {{ donor.surname }}</li>
-            <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ donor.phone_number }}</li>
-            <li class="list-group-item"><strong>{{ _("Email:") }}</strong> {{ donor.email }}</li>
-            <li class="list-group-item">
-                <strong>{{ _("TOTP Status:") }}</strong>
-                {% if current_user.totp_secret %}
-                {{ _("Enabled") }}
-                <i class="fas fa-check text-success"></i>
-                <form action="{{ url_for('auth.remove_totp') }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger btn-sm">{{ _("Remove TOTP") }}</button>
-                </form>
-                {% else %}
-                {{ _("Disabled") }}
-                <i class="fas fa-times text-danger"></i>
-                <a href="{{ url_for('auth.setup_totp') }}" class="btn btn-primary btn-sm">{{ _("Setup TOTP") }}</a>
-                {% endif %}
-            </li>
-        </ul>
-    </section>
-</div> #}
 <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ donor.name }}</li>
 <li class="list-group-item"><strong>{{ _("Last name:") }}</strong> {{ donor.surname }}</li>
 <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ donor.phone_number }}</li>
