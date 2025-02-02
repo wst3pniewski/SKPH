@@ -8,10 +8,9 @@ if TYPE_CHECKING:
 
 
 class Donor(db.Model):
-    # TODO: unify
     donor_id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    surname: Mapped[str]
+    first_name: Mapped[str]
+    last_name: Mapped[str]
     phone_number: Mapped[str]
     email: Mapped[str]
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
@@ -28,4 +27,4 @@ class Donor(db.Model):
         return f"Confirmation requested for donation ID: {donation_id}"
 
     def __repr__(self):
-        return f"<Donor(name={self.name}, email={self.email})>"
+        return f"<Donor(name={self.first_name}, email={self.email})>"

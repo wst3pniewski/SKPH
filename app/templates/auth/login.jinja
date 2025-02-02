@@ -6,13 +6,13 @@
 <div class="container mt-4">
   <h2>{{ _("Login") }}</h2>
   <form method="POST" action="{{ url_for('auth.login') }}">
-    <div class="form-group">
-      <label for="email">{{ _("Email") }}</label>
+    <div class="form-group mb-3">
+      <label for="email" class="form-label">{{ _("Email") }}</label>
       <input type="email" name="email" id="email" class="form-control" placeholder="{{ _('Enter your email') }}"
         required>
     </div>
-    <div class="form-group">
-      <label for="password">{{ _("Password") }}</label>
+    <div class="form-group mb-3">
+      <label for="password" class="form-label">{{ _("Password") }}</label>
       <input type="password" name="password" id="password" class="form-control"
         placeholder="{{ _('Enter your password') }}" required>
     </div>

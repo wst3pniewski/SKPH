@@ -11,21 +11,18 @@
                 <img src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
                     alt="Profile Picture" class="rounded-circle" width="100" height="100">
                 <a href="{{ url_for('auth.setup_profile_picture') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-pencil-alt"></i> <!-- Pencil icon for editing -->
+                    <i class="fas fa-pencil-alt"></i>
                 </a>
                 {% if current_user.profile_picture %}
                 <form action="{{ url_for('auth.delete_profile_picture') }}" method="post" class="d-inline">
                     <button type="submit" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash-alt"></i> <!-- Trashcan icon for deleting -->
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
                 {% endif %}
             </li>
             <li class="list-group-item"><strong>{{ _("Email:") }}</strong> {{ current_user.email }}</li>
             {% block specific_user %}{% endblock %}
-            {# <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ donor.name }}</li> #}
-            {# <li class="list-group-item"><strong>{{ _("Last name:") }}</strong> {{ donor.surname }}</li> #}
-            {# <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ donor.phone_number }}</li> #}
             <li class="list-group-item">
                 <strong>{{ _("TOTP Status:") }}</strong>
                 {% if current_user.totp_secret %}
@@ -42,5 +39,50 @@
             </li>
         </ul>
     </section>
+    <br>
+    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+        {{ _("Edit Profile") }}
+    </button>
 </div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">{{ _("Edit Profile") }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Profile Edit Form -->
+                <form id="editProfileForm">
+                    {% block specific_user_edit_modal %}{% endblock %}
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block ascript %}
+<script>
+    $(document).ready(function () {
+        $('#editProfileForm').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '/auth/update_profile',
+                data: $(this).serialize(),
+                success: function (response) {
+                    alert(response.message);
+                    $('#editProfileModal').modal('hide');
+                },
+                error: function () {
+                    alert("Error updating profile. Please try again.");
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

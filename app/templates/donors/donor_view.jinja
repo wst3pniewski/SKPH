@@ -5,10 +5,10 @@
 {% block content %}
 <div class="container mt-2">
   <div>
-    <a href="{{ url_for('donors.index') }}" class="btn btn-secondary">Back</a>
+    <a href="{{ url_for('donors.index') }}" class="btn btn-secondary">{{ _("Back") }}</a>
   </div>
   <hr class="my-d" />
-  <h1>Donor List</h1>
+  <h1>{{ _("Donor List") }}</h1>
   <table class="table table-hover">
     <thead>
       <tr>
@@ -23,13 +23,13 @@
       {% for donor in donors %}
       <tr>
         <td>{{ donor.donor_id }}</td>
-        <td>{{ donor.name }}</td>
-        <td>{{ donor.surname }}</td>
+        <td>{{ donor.first_name }}</td>
+        <td>{{ donor.last_name }}</td>
         <td>{{ donor.phone_number }}</td>
         <td>{{ donor.email }}</td>
         <td>
-          <a class="btn btn-primary btn-sm" href="{{ url_for('donors.list_donations', donor_id=donor.donor_id) }}">{{
-            _("View Donations") }}
+          <a class="btn btn-primary btn-sm" href="{{ url_for('donors.list_donations', donor_id=donor.donor_id) }}">
+            {{ _("View Donations") }}
           </a>
         </td>
       </tr>

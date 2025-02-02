@@ -95,7 +95,7 @@ def index(error_message=None):
             .join(Donor, DonationItem.donor_id == Donor.donor_id) \
             .join(DonationType, DonationItem.donation_type_id == DonationType.id) \
             .add_columns(DonationItem.donationItem_id, DonationItem.description, DonationItem.amount,
-                         cast(DonationItem.donation_date, VARCHAR), DonationType.type, Donor.name, Donor.surname) \
+                         cast(DonationItem.donation_date, VARCHAR), DonationType.type, Donor.first_name, Donor.last_name) \
             .filter(DonationItem.charity_campaign == curr_organization_charity_campaign).all()
 
         # donation money history for current OrganizationCharityCampaign
@@ -159,7 +159,7 @@ def index(error_message=None):
             .join(Donor, DonationItem.donor_id == Donor.donor_id) \
             .join(DonationType, DonationItem.donation_type_id == DonationType.id) \
             .add_columns(DonationItem.donationItem_id, DonationItem.description, DonationItem.amount,
-                         cast(DonationItem.donation_date, VARCHAR), DonationType.type, Donor.name, Donor.surname) \
+                         cast(DonationItem.donation_date, VARCHAR), DonationType.type, Donor.first_name, Donor.last_name) \
             .filter(DonationItem.charity_campaign == curr_organization_charity_campaign).all()
 
         # get money donation history

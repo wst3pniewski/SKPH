@@ -6,9 +6,9 @@
 <div class="container mt-4">
     <h1>{{ _("Setup Profile Picture") }}</h1>
     <form action="{{ url_for('auth.setup_profile_picture') }}" method="post" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="file">{{ _("Choose a profile picture") }}</label>
-            <input type="file" class="form-control-file" id="file" name="file" required>
+        <div class="mb-3">
+            <label for="file" class="form-label">{{ _("Choose a profile picture") }}</label>
+            <input class="form-control" type="file" id="file" name="file" required>
         </div>
         <button type="submit" class="btn btn-primary">{{ _("Upload") }}</button>
     </form>

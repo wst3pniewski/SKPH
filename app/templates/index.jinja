@@ -3,15 +3,15 @@
 {% block title %}{{ _("Crisis Management System") }}{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
+<div class="container, m-4">
   <h1 class="display-3">{{ _("Crisis Management System") }}</h1>
   <p class="lead">
     {{_("""The Crisis Management System is a web-based platform that brings authorities,
     volunteers, aid organisations, affected and donors together in one place,
     enabling effective coordination of emergency aid.""") }}
   </p>
-  <hr class="my-4">
   {% if current_user.type == 'admin' %}
+  <hr class="my-4">
   <h3>{{ _("Modules") }}</h3>
   <div class="d-flex flex-column">
     <a class="btn btn-primary btn-lg" href="{{ url_for('volunteers.index') }}">{{ _("Volunteers Module") }}</a>

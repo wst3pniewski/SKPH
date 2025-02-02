@@ -166,8 +166,8 @@ def confirm_money(donation_money_id):
 @bp.route('/samples', methods=['POST'])
 def donor_samples():
     new_donor = Donor(
-        name="John",
-        surname="Doe",
+        first_name="John",
+        last_name="Doe",
         phone_number="123456789",
         email="john.doe@example.com",
         user_id=current_user.id

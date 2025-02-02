@@ -9,8 +9,8 @@
     {{ form.hidden_tag() }}
 
     <!-- Email Field -->
-    <div class="form-group">
-      <label for="email">{{ _("Email") }}</label>
+    <div class="form-group mb-3">
+      <label for="email" class="form-label">{{ _("Email") }}</label>
       {{ form.email(class="form-control", placeholder=_("Enter your email"), id="email") }}
       {% if form.email.errors %}
       <div class="text-danger">
@@ -20,8 +20,8 @@
     </div>
 
     <!-- Password Field -->
-    <div class="form-group">
-      <label for="password">{{ _("Password") }}</label>
+    <div class="form-group mb-3">
+      <label for="password" class="form-label">{{ _("Password") }}</label>
       {{ form.password(class="form-control", placeholder=_("Enter your password"), id="password") }}
       {% if form.password.errors %}
       <div class="text-danger">
@@ -31,8 +31,8 @@
     </div>
 
     <!-- Confirm Password Field -->
-    <div class="form-group">
-      <label for="confirm_password">{{ _("Confirm Password") }}</label>
+    <div class="form-group mb-3">
+      <label for="confirm_password" class="form-label">{{ _("Confirm Password") }}</label>
       {{ form.confirm_password(class="form-control", placeholder=_("Re-enter your password"), id="confirm_password") }}
       {% if form.confirm_password.errors %}
       <div class="text-danger">
@@ -43,8 +43,8 @@
 
     <!-- Additional Fields for Donor-->
     {% if user_type == 'donor' %}
-    <div class="form-group">
-      <label for="first_name">{{ _("First Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="first_name" class="form-label">{{ _("First Name") }}</label>
       {{ form.first_name(class="form-control", placeholder=_("Enter your first name"), id="first_name") }}
       {% if form.first_name.errors %}
       <div class="text-danger">
@@ -52,8 +52,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="last_name">{{ _("Last Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="last_name" class="form-label">{{ _("Last Name") }}</label>
       {{ form.last_name(class="form-control", placeholder=_("Enter your last name"), id="last_name") }}
       {% if form.last_name.errors %}
       <div class="text-danger">
@@ -61,8 +61,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="phone">{{ _("Phone") }}</label>
+    <div class="form-group mb-3">
+      <label for="phone" class="form-label">{{ _("Phone") }}</label>
       {{ form.phone(class="form-control", placeholder=_("Enter your phone number"), id="phone") }}
       {% if form.phone.errors %}
       <div class="text-danger">
@@ -74,8 +74,8 @@
 
     <!-- Additional Fields for Volunteer -->
     {% if user_type == 'volunteer' %}
-    <div class="form-group">
-      <label for="first_name">{{ _("First Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="first_name" class="form-label">{{ _("First Name") }}</label>
       {{ form.first_name(class="form-control", placeholder=_("Enter your first name"), id="first_name") }}
       {% if form.first_name.errors %}
       <div class="text-danger">
@@ -83,8 +83,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="last_name">{{ _("Last Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="last_name" class="form-label">{{ _("Last Name") }}</label>
       {{ form.last_name(class="form-control", placeholder=_("Enter your last name"), id="last_name") }}
       {% if form.last_name.errors %}
       <div class="text-danger">
@@ -92,8 +92,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="phone">{{ _("Phone") }}</label>
+    <div class="form-group mb-3">
+      <label for="phone" class="form-label">{{ _("Phone") }}</label>
       {{ form.phone(class="form-control", placeholder=_("Enter your phone number"), id="phone") }}
       {% if form.phone.errors %}
       <div class="text-danger">
@@ -101,8 +101,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street">{{ _("Street") }}</label>
+    <div class="form-group mb-3">
+      <label for="street" class="form-label">{{ _("Street") }}</label>
       {{ form.street(class="form-control", placeholder=_("Enter your street"), id="street") }}
       {% if form.street.errors %}
       <div class="text-danger">
@@ -110,8 +110,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street_number">{{ _("Street Number") }}</label>
+    <div class="form-group mb-3">
+      <label for="street_number" class="form-label">{{ _("Street Number") }}</label>
       {{ form.street_number(class="form-control", placeholder=_("Enter your street number"), id="street_number") }}
       {% if form.street_number.errors %}
       <div class="text-danger">
@@ -119,8 +119,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="city">{{ _("City") }}</label>
+    <div class="form-group mb-3">
+      <label for="city" class="form-label">{{ _("City") }}</label>
       {{ form.city(class="form-control", placeholder=_("Enter your city"), id="city") }}
       {% if form.city.errors %}
       <div class="text-danger">
@@ -128,8 +128,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="voivodeship">{{ _("Voivodeship") }}</label>
+    <div class="form-group mb-3">
+      <label for="voivodeship" class="form-label">{{ _("Voivodeship") }}</label>
       {{ form.voivodeship(class="form-control", placeholder=_("Enter your voivodeship"), id="voivodeship") }}
       {% if form.voivodeship.errors %}
       <div class="text-danger">
@@ -141,8 +141,8 @@
 
     <!-- Additional Fields for Organization -->
     {% if user_type == 'organization' %}
-    <div class="form-group">
-      <label for="organization_name">{{ _("Organization Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="organization_name" class="form-label">{{ _("Organization Name") }}</label>
       {{ form.organization_name(class="form-control", placeholder=_("Enter your organization name"),
       id="organization_name") }}
       {% if form.organization_name.errors %}
@@ -151,8 +151,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="description">{{ _("Description") }}</label>
+    <div class="form-group mb-3">
+      <label for="description" class="form-label">{{ _("Description") }}</label>
       {{ form.description(class="form-control", placeholder=_("Enter a description of your organization"),
       id="description") }}
       {% if form.description.errors %}
@@ -161,8 +161,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="phone">{{ _("Phone") }}</label>
+    <div class="form-group mb-3">
+      <label for="phone" class="form-label">{{ _("Phone") }}</label>
       {{ form.phone(class="form-control", placeholder=_("Enter your phone number"), id="phone") }}
       {% if form.phone.errors %}
       <div class="text-danger">
@@ -170,8 +170,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street">{{ _("Street") }}</label>
+    <div class="form-group mb-3">
+      <label for="street" class="form-label">{{ _("Street") }}</label>
       {{ form.street(class="form-control", placeholder=_("Enter your street"), id="street") }}
       {% if form.street.errors %}
       <div class="text-danger">
@@ -179,8 +179,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street_number">{{ _("Street Number") }}</label>
+    <div class="form-group mb-3">
+      <label for="street_number" class="form-label">{{ _("Street Number") }}</label>
       {{ form.street_number(class="form-control", placeholder=_("Enter your street number"), id="street_number") }}
       {% if form.street_number.errors %}
       <div class="text-danger">
@@ -188,8 +188,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="city">{{ _("City") }}</label>
+    <div class="form-group mb-3">
+      <label for="city" class="form-label">{{ _("City") }}</label>
       {{ form.city(class="form-control", placeholder=_("Enter your city"), id="city") }}
       {% if form.city.errors %}
       <div class="text-danger">
@@ -197,8 +197,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="voivodeship">{{ _("Voivodeship") }}</label>
+    <div class="form-group mb-3">
+      <label for="voivodeship" class="form-label">{{ _("Voivodeship") }}</label>
       {{ form.voivodeship(class="form-control", placeholder=_("Enter your voivodeship"), id="voivodeship") }}
       {% if form.voivodeship.errors %}
       <div class="text-danger">
@@ -210,8 +210,8 @@
 
     <!-- Additional Fields for Affected -->
     {% if user_type == 'affected' %}
-    <div class="form-group">
-      <label for="first_name">{{ _("First Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="first_name" class="form-label">{{ _("First Name") }}</label>
       {{ form.first_name(class="form-control", placeholder=_("Enter your first name"), id="first_name") }}
       {% if form.first_name.errors %}
       <div class="text-danger">
@@ -219,8 +219,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="last_name">{{ _("Last Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="last_name" class="form-label">{{ _("Last Name") }}</label>
       {{ form.last_name(class="form-control", placeholder=_("Enter your last name"), id="last_name") }}
       {% if form.last_name.errors %}
       <div class="text-danger">
@@ -228,8 +228,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="needs">{{ _("Needs") }}</label>
+    <div class="form-group mb-3">
+      <label for="needs" class="form-label">{{ _("Needs") }}</label>
       {{ form.needs(class="form-control", placeholder=_("Enter your needs"), id="needs") }}
       {% if form.needs.errors %}
       <div class="text-danger">
@@ -237,8 +237,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street">{{ _("Street") }}</label>
+    <div class="form-group mb-3">
+      <label for="street" class="form-label">{{ _("Street") }}</label>
       {{ form.street(class="form-control", placeholder=_("Enter your street"), id="street") }}
       {% if form.street.errors %}
       <div class="text-danger">
@@ -246,8 +246,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street_number">{{ _("Street Number") }}</label>
+    <div class="form-group mb-3">
+      <label for="street_number" class="form-label">{{ _("Street Number") }}</label>
       {{ form.street_number(class="form-control", placeholder=_("Enter your street number"), id="street_number") }}
       {% if form.street_number.errors %}
       <div class="text-danger">
@@ -255,8 +255,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="city">{{ _("City") }}</label>
+    <div class="form-group mb-3">
+      <label for="city" class="form-label">{{ _("City") }}</label>
       {{ form.city(class="form-control", placeholder=_("Enter your city"), id="city") }}
       {% if form.city.errors %}
       <div class="text-danger">
@@ -264,8 +264,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="voivodeship">{{ _("Voivodeship") }}</label>
+    <div class="form-group mb-3">
+      <label for="voivodeship" class="form-label">{{ _("Voivodeship") }}</label>
       {{ form.voivodeship(class="form-control", placeholder=_("Enter your voivodeship"), id="voivodeship") }}
       {% if form.voivodeship.errors %}
       <div class="text-danger">
@@ -277,8 +277,8 @@
 
     <!-- Additional Fields for Authorities -->
     {% if user_type == 'authorities' %}
-    <div class="form-group">
-      <label for="name">{{ _("Name") }}</label>
+    <div class="form-group mb-3">
+      <label for="name" class="form-label">{{ _("Name") }}</label>
       {{ form.name(class="form-control", placeholder=_("Enter your name"), id="name") }}
       {% if form.name.errors %}
       <div class="text-danger">
@@ -286,8 +286,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="phone">{{ _("Phone") }}</label>
+    <div class="form-group mb-3">
+      <label for="phone" class="form-label">{{ _("Phone") }}</label>
       {{ form.phone(class="form-control", placeholder=_("Enter your phone number"), id="phone") }}
       {% if form.phone.errors %}
       <div class="text-danger">
@@ -295,8 +295,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street">{{ _("Street") }}</label>
+    <div class="form-group mb-3">
+      <label for="street" class="form-label">{{ _("Street") }}</label>
       {{ form.street(class="form-control", placeholder=_("Enter your street"), id="street") }}
       {% if form.street.errors %}
       <div class="text-danger">
@@ -304,8 +304,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="street_number">{{ _("Street Number") }}</label>
+    <div class="form-group mb-3">
+      <label for="street_number" class="form-label">{{ _("Street Number") }}</label>
       {{ form.street_number(class="form-control", placeholder=_("Enter your street number"), id="street_number") }}
       {% if form.street_number.errors %}
       <div class="text-danger">
@@ -313,8 +313,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="city">{{ _("City") }}</label>
+    <div class="form-group mb-3">
+      <label for="city" class="form-label">{{ _("City") }}</label>
       {{ form.city(class="form-control", placeholder=_("Enter your city"), id="city") }}
       {% if form.city.errors %}
       <div class="text-danger">
@@ -322,8 +322,8 @@
       </div>
       {% endif %}
     </div>
-    <div class="form-group">
-      <label for="voivodeship">{{ _("Voivodeship") }}</label>
+    <div class="form-group mb-3">
+      <label for="voivodeship" class="form-label">{{ _("Voivodeship") }}</label>
       {{ form.voivodeship(class="form-control", placeholder=_("Enter your voivodeship"), id="voivodeship") }}
       {% if form.voivodeship.errors %}
       <div class="text-danger">
@@ -332,7 +332,7 @@
       {% endif %}
     </div>
     {% endif %}
-    <button type="submit" class="btn btn-primary">{{ _("Register") }}</button>
+    <button type="submit" class="btn btn-primary mt-3 mb-3">{{ _("Register") }}</button>
   </form>
 </div>
 {% endblock %}

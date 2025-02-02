@@ -276,8 +276,8 @@ def donor_report():
         html += f"""
             <tr>
               <td>{d.donor_id}</td>
-              <td>{d.name}</td>
-              <td>{d.surname}</td>
+              <td>{d.first_name}</td>
+              <td>{d.last_name}</td>
               <td>{d.email}</td>
               <td>{d.phone_number}</td>
               <td>{mcount}</td>
@@ -311,7 +311,7 @@ def donor_report_csv():
     for d in donors:
         mcount = len(d.donations_money)
         icount = len(d.donations_items)
-        writer.writerow([d.donor_id, d.name, d.surname, d.email, d.phone_number, mcount, icount])
+        writer.writerow([d.donor_id, d.first_name, d.last_name, d.email, d.phone_number, mcount, icount])
 
     csv_data = output.getvalue()
     output.close()
@@ -350,7 +350,7 @@ def single_donor_report():
     <body class="bg-light">
       <div class="container mt-5">
         <h1 class="text-primary text-center">Raport Donora {donor_id}</h1>
-        <p>Imię: {donor.name}, nazwisko: {donor.surname}, email: {donor.email}, tel: {donor.phone_number}</p>
+        <p>Imię: {donor.first_name}, nazwisko: {donor.last_name}, email: {donor.email}, tel: {donor.phone_number}</p>
 
         <h2>Podsumowanie</h2>
         <ul>
