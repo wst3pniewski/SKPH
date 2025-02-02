@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from flask_wtf.csrf import CSRFProtect
 
 from app.affected.routes import bp as affected_bp
 from app.auth.routes import bp as auth_bp
@@ -30,6 +31,7 @@ def create_app(config_name=None):
     init_login_manager(flask_app)
     mail.init_app(flask_app)
     socketio.init_app(flask_app)
+    csrf = CSRFProtect(flask_app)
 
     with flask_app.app_context():
         # db.drop_all()
