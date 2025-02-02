@@ -1,15 +1,18 @@
 import base64
+import os
+import uuid  # Add this import
 from io import BytesIO
+
 import pyotp
 import qrcode
-from flask import (Blueprint, abort, flash, redirect, render_template, request,
-                   url_for, session, current_app)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
+                   render_template, request, session, url_for)
+from flask_babel import gettext as _
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
-import os
-import uuid  # Add this import
 
+from app.auth.login_form import LoginForm
 from app.auth.register_forms import (AffectedRegisterForm,
                                      AuthoritiesRegisterForm,
                                      DonorRegisterForm,
@@ -49,7 +52,7 @@ def index():
     if current_user.is_authenticated:
         logout_user()
 
-    return "Admin user created if it did not exist already."
+    return _("Admin user created if it did not exist already.")
 
 
 def get_registration_form(user_type):
@@ -146,10 +149,11 @@ def register(user_type):
 
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
-            flash('Email already registered. Please use a different email.', 'danger')
+            flash(_('Email already registered. Please use a different email.'), 'danger')
             return render_template('register.jinja', form=form, user_type=user_type)
 
         create_user_and_related_data(form, user_type)
+        flash(_('Your account has been created successfully.'))
         return redirect(url_for('auth.login'))
 
     return render_template('register.jinja', form=form, user_type=user_type)
@@ -159,7 +163,7 @@ def register(user_type):
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.', 'info')
+    flash(_('You have been logged out.'), 'info')
     return redirect(url_for('auth.login'))
 
 
@@ -168,32 +172,35 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
 
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             if user.totp_secret:
                 return redirect(url_for('auth.verify_totp', user_id=user.id))
             login_user(user)
-            flash('Logged in successfully.', 'success')
+            flash(_('Logged in successfully.'), 'success')
             return redirect(url_for('home'))
-        flash('Invalid email or password.', 'danger')
-    return render_template('login.jinja')
+        flash(_('Invalid email or password.'), 'danger')
+
+    return render_template('login.jinja', form=form)
 
 
 @bp.route('/setup-totp', methods=['GET', 'POST'])
 @roles_required(['donor', 'authorities', 'organization', 'affected', 'volunteer'])
 def setup_totp():
     if current_user.totp_secret:
-        flash('TOTP is already set up.', 'info')
+        flash(_('TOTP is already set up.'), 'info')
         return redirect(url_for('auth.profile'))
 
     if request.method == 'POST':
         totp_code = request.form['totp_code']
         totp_secret = session.get('totp_secret')
         if not totp_secret:
-            flash('TOTP setup session expired. Please try again.', 'warning')
+            flash(_('TOTP setup session expired. Please try again.'), 'warning')
             return redirect(url_for('auth.setup_totp'))
 
         totp = pyotp.TOTP(totp_secret)
@@ -202,10 +209,10 @@ def setup_totp():
             current_user.totp_secret = totp_secret
             db.session.commit()
             session.pop('totp_secret', None)
-            flash('TOTP verified and saved. 2-fa set properly.', 'success')
+            flash(_('TOTP verified and saved. 2-fa set properly.'), 'success')
             return redirect(url_for('auth.profile'))
         else:
-            flash('Invalid TOTP code.', 'danger')
+            flash(_('Invalid TOTP code.'), 'danger')
             return redirect(url_for('auth.profile'))
     else:
         totp_secret = pyotp.random_base32()
@@ -234,10 +241,10 @@ def verify_totp(user_id):
 
         if totp.verify(totp_code):
             login_user(user)
-            flash('TOTP verified. Logged in successfully.', 'success')
+            flash(_('TOTP verified. Logged in successfully.'), 'success')
             return redirect(url_for('home'))
         else:
-            flash('Invalid TOTP code.', 'danger')
+            flash(_('Invalid TOTP code.'), 'danger')
 
     return render_template('verify_totp.jinja')
 
@@ -252,9 +259,9 @@ def reset_password_request():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             send_reset_password_email(user)
-            flash('Check your email for the instructions to reset your password.', 'info')
+            flash(_('Check your email for the instructions to reset your password.'), 'info')
             return redirect(url_for('auth.login'))
-        flash('Invalid email address.', 'danger')
+        flash(_('Invalid email address.'), 'danger')
 
     return render_template('reset_password_request.jinja', form=form)
 
@@ -266,14 +273,14 @@ def reset_password(token, user_id):
 
     user = User.validate_reset_password_token(token, user_id)
     if not user:
-        flash('Invalid or expired token.', 'danger')
+        flash(_('Invalid or expired token.'), 'danger')
         return redirect(url_for('auth.reset_password_request'))
 
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user.set_password(form.password.data)
         db.session.commit()
-        flash('Your password has been reset.', 'success')
+        flash(_('Your password has been reset.'), 'success')
         return redirect(url_for('auth.login'))
 
     return render_template('reset_password.jinja', form=form)
@@ -301,22 +308,22 @@ def manage_users():
                 authority = user.authorities
                 if action == 'approve':
                     authority.approve()
-                    flash(f'Authority {authority.name} approved.', 'success')
+                    flash(_('Authority %(name)s approved.', name=authority.name), 'success')
                 elif action == 'disapprove':
                     authority.disapprove()
-                    flash(f'Authority {authority.name} disapproved.', 'warning')
+                    flash(_('Authority %(name)s disapproved.', name=authority.name), 'warning')
         elif user_type == 'organization':
             user = User.query.get(user_id)
             if user and user.organization:
                 organization = user.organization
                 if action == 'approve':
                     organization.approve()
-                    flash(f'Organization {organization.organization_name} approved.', 'success')
+                    flash(_('Organization %(name)s approved.', name=organization.organization_name), 'success')
                 elif action == 'disapprove':
                     organization.disapprove()
-                    flash(f'Organization {organization.organization_name} disapproved.', 'warning')
+                    flash(_('Organization %(name)s disapproved.', name=organization.organization_name), 'warning')
             else:
-                flash("Organization not found.", "danger")
+                flash(_("Organization not found."), "danger")
 
         return redirect(url_for('auth.manage_users'))
 
@@ -341,12 +348,12 @@ def profile():
 @login_required
 def remove_totp():
     if not current_user.totp_secret:
-        flash('TOTP is not set up.', 'info')
+        flash(_('TOTP is not set up.'), 'info')
         return redirect(url_for('auth.profile'))
 
     current_user.totp_secret = None
     db.session.commit()
-    flash('TOTP has been removed.', 'success')
+    flash(_('TOTP has been removed.'), 'success')
     return redirect(url_for('auth.profile'))
 
 
@@ -359,18 +366,18 @@ def allowed_file(filename):
 def setup_profile_picture():
     if request.method == 'POST':
         if 'file' not in request.files:
-            flash('No file part', 'danger')
+            flash(_('No file part'), 'danger')
             return redirect(request.url)
         file = request.files['file']
         if file.filename == '':
-            flash('No selected file', 'danger')
+            flash(_('No selected file'), 'danger')
             return redirect(request.url)
         if file and allowed_file(file.filename):
             if file.mimetype not in ['image/png', 'image/jpeg', 'image/gif']:
-                flash('Invalid file type. Only PNG, JPEG, and GIF are allowed.', 'danger')
+                flash(_('Invalid file type. Only PNG, JPEG, and GIF are allowed.'), 'danger')
                 return redirect(request.url)
             if len(file.read()) > 1 * 1024 * 1024:
-                flash('File size exceeds 1MB limit.', 'danger')
+                flash(_('File size exceeds 1MB limit.'), 'danger')
                 return redirect(request.url)
             file.seek(0)
             filename = secure_filename(file.filename)
@@ -383,7 +390,7 @@ def setup_profile_picture():
             file.save(file_path)
             current_user.profile_picture = random_filename
             db.session.commit()
-            flash('Profile picture updated successfully.', 'success')
+            flash(_('Profile picture updated successfully.'), 'success')
             return redirect(url_for('auth.profile'))
     return render_template('setup_profile_picture.jinja')
 
@@ -397,7 +404,17 @@ def delete_profile_picture():
             os.remove(file_path)
         current_user.profile_picture = None
         db.session.commit()
-        flash('Profile picture deleted successfully.', 'success')
+        flash(_('Profile picture deleted successfully.'), 'success')
     else:
-        flash('No profile picture to delete.', 'warning')
+        flash(_('No profile picture to delete.'), 'warning')
     return redirect(url_for('auth.profile'))
+
+
+@bp.route('/set_theme', methods=['POST'])
+def set_theme():
+    data = request.get_json()
+    theme = data.get('theme')
+    if theme in ['light', 'dark']:
+        session['theme'] = theme
+        return jsonify(success=True)
+    return jsonify(success=False), 400
