@@ -1,3 +1,4 @@
+from flask_babel import gettext as _
 from flask import (Blueprint, flash, redirect, render_template,
                    render_template_string, request, url_for)
 from flask_login import current_user, login_required
@@ -42,7 +43,7 @@ def send_status_update_email(user, request_obj):
 
 
 def initialize_donation_types():
-    donation_types = ['Food', 'Clothes', 'Shelter', 'Medical Supplies']
+    donation_types = [_('Food'), _('Clothes'), _('Shelter'), _('Medical Supplies')]
     existing_types = db.session.query(DonationType.type).all()
     existing_types = [type[0] for type in existing_types]
 
