@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from flask_mailman import EmailMessage
 
 from app.auth.user_service import roles_required
-from app.extensions import db, mail
+from app.extensions import csrf, db, mail
 from app.models.address import Address
 from app.models.affected import Affected
 from app.models.authorities import Authorities
@@ -38,6 +38,19 @@ def send_status_update_email(user, request_obj):
 
     with mail.get_connection() as connection:
         message.send(connection)
+
+
+def initialize_donation_types():
+    donation_types = ['Food', 'Clothes', 'Shelter', 'Medical Supplies']
+    existing_types = db.session.query(DonationType.type).all()
+    existing_types = [type[0] for type in existing_types]
+
+    for type in donation_types:
+        if type not in existing_types:
+            new_type = DonationType(type=type)
+            db.session.add(new_type)
+
+    db.session.commit()
 
 
 @bp.route('/')
@@ -133,6 +146,7 @@ def select_affected():
 @bp.route('/request/create', methods=['GET', 'POST'])
 @login_required
 @roles_required(['affected'])
+@csrf.exempt
 def create_request():
     affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
     if not affected:

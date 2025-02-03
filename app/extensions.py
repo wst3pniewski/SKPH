@@ -3,6 +3,7 @@ from flask_babel import Babel
 from flask_mailman import Mail
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from flask_wtf.csrf import CSRFProtect
 
 
 class Base(DeclarativeBase):
@@ -16,3 +17,4 @@ def get_locale():
 db = SQLAlchemy(model_class=Base)
 babel = Babel()
 mail = Mail()
+csrf = CSRFProtect()

@@ -2,16 +2,16 @@ import os
 from flask import Flask, render_template, request, redirect
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from flask_wtf.csrf import CSRFProtect
 
-from app.affected.routes import bp as affected_bp
+from app.affected.routes import bp as affected_bp, initialize_donation_types
 from app.auth.routes import bp as auth_bp
 from app.auth.user_service import init_login_manager
 from app.communication.routes import bp as chat_bp
 from app.communication.socketio_chat import socketio
 from app.donors.routes import bp as donors_bp
-from app.extensions import babel, db, get_locale, mail
+from app.extensions import babel, db, get_locale, mail, csrf
 from app.maps.routes import bp as maps_bp
+from app.models.donation import DonationType
 from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
 from app.volunteers.routes import bp as volunteers_bp
@@ -31,11 +31,12 @@ def create_app(config_name=None):
     init_login_manager(flask_app)
     mail.init_app(flask_app)
     socketio.init_app(flask_app)
-    csrf = CSRFProtect(flask_app)
+    csrf.init_app(flask_app)
 
     with flask_app.app_context():
         # db.drop_all()
         db.create_all()
+        initialize_donation_types()
 
     # Register blueprints here
     flask_app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -57,6 +58,7 @@ def create_app(config_name=None):
     flask_app.register_blueprint(supply_chain_bp, url_prefix='/supply-chain')
 
     @flask_app.route('/set_language', methods=['POST'])
+    @csrf.exempt
     def set_language():
         lang = request.form.get('lang')
         response = redirect(request.referrer)

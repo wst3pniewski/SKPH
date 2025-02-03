@@ -182,7 +182,6 @@ def login():
             if user.totp_secret:
                 return redirect(url_for('auth.verify_totp', user_id=user.id))
             login_user(user)
-            flash(_('Logged in successfully.'), 'success')
             return redirect(url_for('home'))
         flash(_('Invalid email or password.'), 'danger')
 
