@@ -62,19 +62,24 @@
   </table>
 
   <form method="post" id="send-resource">
+    {{ form.hidden_tag() }}
     <div class="mb-3">
-      <label class="form-label" for="donation_amount">{{ _('Donation amount') }}:</label>
-      <input class="form-control" type="number" name="donation_amount" value="{{curr_request.amount}}"
-        min="{{curr_request.amount}}" max="{{stock_item.amount}}">
+      {{ form.donation_amount.label(class="form-label") }}
+      {{ form.donation_amount(class="form-control", min=curr_request.amount, max=stock_item.amount,
+      value=curr_request.amount) }}
+      {% for error in form.donation_amount.errors %}
+      <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
     <div class="mb-3">
-      <label class="form-label" for="donation_type">{{ _('Donation type') }}:</label>
-      <select class="form-control" name="donation_type">
-        <option value={{curr_request.type}}>{{curr_request.donation_type.type}}</option>
-      </select>
+      {{ form.donation_type.label(class="form-label") }}
+      {{ form.donation_type(class="form-control") }}
+      {% for error in form.donation_type.errors %}
+      <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
     <div class="mb-3">
-      <label class="form-label" for="item_amount">{{_('Avalible resource amount:')}}</label>
+      <label class="form-label" for="item_amount">{{_('Available resource amount:')}}</label>
       {% if stock_item.amount is defined %}
       <input class="form-control" type="number" name="item_amount" value="{{stock_item.amount}}" readonly />
       {% elif stock_item.cashAmount is defined %}
@@ -84,9 +89,9 @@
       {% endif %}
     </div>
     {% if success_message is defined and success_message is not none %}
-    <input class="btn btn-primary" type="submit" value="{{_('Send to affected')}}" disabled id="submit-button">
+    {{ form.submit(class="btn btn-primary", disabled=True) }}
     {% else %}
-    <input class="btn btn-primary" type="submit" value="{{_('Send to affected')}}" id="submit-button">
+    {{ form.submit(class="btn btn-primary") }}
     {% endif %}
   </form>
 </div>

@@ -4,11 +4,6 @@
 
 {% block content %}
 <div class="container-fluid p-4">
-  {% if error_message is defined and error_message is not none %}
-  <div class="alert alert-dismissible alert-danger">
-    <strong>{{ _("Error:") }} {{_(error_message)}}</strong>
-  </div>
-  {% endif %}
   <a class="btn btn-dark btn-lg" href="{{ url_for('home') }}">{{ _("Back") }}</a>
   <div class="btn-group" role="group">
     <a class="btn btn-primary btn-lg" id="donated-items-button"
@@ -26,16 +21,15 @@
   {% if charity_campaign is defined %}
   <h3>{{ _("Select the aid campaign you wish to manage") }}</h3>
   <form class="my-3" method="post">
-    <select class="form-select mb-3" name="curr_charity_campaign">
-      {% for campaign in organization.charity_campaigns %}
-      {% if campaign.name == charity_campaign.name %}
-      <option value="{{ campaign.id }}" selected>{{campaign.name}}</option>
-      {% else %}
-      <option value="{{ campaign.id }}">{{campaign.name}}</option>
-      {% endif %}
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+      {{ form.curr_charity_campaign.label(class="form-label") }}
+      {{ form.curr_charity_campaign(class="form-select mb-3") }}
+      {% for error in form.curr_charity_campaign.errors %}
+      <div class="text-danger">{{ error }}</div>
       {% endfor %}
-    </select>
-    <input class="btn btn-secondary" type="submit" value='{{ _("Select charity campaign") }}'>
+    </div>
+    {{ form.submit(class="btn btn-secondary") }}
   </form>
   <hr>
   <h4 class="my-4">{{ _("Managing Campaign") }}: <strong>{{ charity_campaign.name }}</strong></h4>
