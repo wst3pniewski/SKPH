@@ -1,268 +1,303 @@
 {% extends "base.jinja" %}
 
-{% block title %}{{ _("Tracking and managing resources module") }}{% endblock %}
-
-{% block script %}
-<script src="../../static/supply_chain/js/view.js"></script>
-{% endblock %}
+{% block title %}{{ _("Tracking and Managing Resources") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid p-4">
   {% if error_message is defined and error_message is not none %}
   <div class="alert alert-dismissible alert-danger">
-    <strong>{{ _("Error:") }} {{_(error_message)}}</strong> 
+    <strong>{{ _("Error:") }} {{_(error_message)}}</strong>
   </div>
   {% endif %}
-  <h1>{{ _("Tracking and managing resources module") }}</h1>
   <a class="btn btn-dark btn-lg" href="{{ url_for('home') }}">{{ _("Back") }}</a>
   <div class="btn-group" role="group">
-    <a  class="btn btn-primary btn-lg" id="donated-items-button"  onclick="changeView(VIEW.AVALIABLE_RESOURCES)">{{_("Avaliable resources")}}</a>
-    <a  class="btn btn-primary btn-lg" id="donated-items-button"  onclick="changeView(VIEW.DONATED_ITEMS)">{{_("Items donated by donors")}}</a>
-    <a  class="btn btn-primary btn-lg" id="donated-money-button"  onclick="changeView(VIEW.DONATED_MONEY)">{{_("Money donated by donors")}}</a>
-    <a  class="btn btn-primary btn-lg" id="pending-requests-button"  onclick="changeView(VIEW.PENDING_REQUESTS)">{{_("Current requests")}}</a>
-    <a  class="btn btn-primary btn-lg" id=" request-history-button"  onclick="changeView(VIEW.REQUEST_HISTORY)">{{_("Completed requests")}}</a>
+    <a class="btn btn-primary btn-lg" id="donated-items-button"
+      onclick="changeView(VIEW.AVALIABLE_RESOURCES)">{{_("Avaliable resources")}}</a>
+    <a class="btn btn-primary btn-lg" id="donated-items-button" onclick="changeView(VIEW.DONATED_ITEMS)">{{_("Items
+      donated by donors")}}</a>
+    <a class="btn btn-primary btn-lg" id="donated-money-button" onclick="changeView(VIEW.DONATED_MONEY)">{{_("Money
+      donated by donors")}}</a>
+    <a class="btn btn-primary btn-lg" id="pending-requests-button"
+      onclick="changeView(VIEW.PENDING_REQUESTS)">{{_("Current requests")}}</a>
+    <a class="btn btn-primary btn-lg" id=" request-history-button"
+      onclick="changeView(VIEW.REQUEST_HISTORY)">{{_("Completed requests")}}</a>
   </div>
-  <br>
-  <br>
-  {% if curr_organization is defined %}
-
-      <h1> {{ _("Organization name:") }} {{curr_organization.organization_name}} </h1>
-      {% if charity_campaign is defined %}
-      <h2> {{ _("Chrity campagin name:") }} {{ charity_campaign.name }}</h2>
-      <br>
-        <form method="post">
-          <select name="curr_charity_campaign" class="form-select">
-            {% for ch_campaign in all_charity_campaigns %}
-              {% if ch_campaign.name == charity_campaign.name %}
-              <option value="{{ch_campaign.id}}" selected>{{ch_campaign.name}}</option>
-              {% else %}
-              <option value="{{ch_campaign.id}}">{{ch_campaign.name}}</option>
-              {% endif %}
-            {% endfor %}
-          </select>
-          <input class="btn btn-secondary" type="submit" value='{{_("Select charity campaign")}}'>
-      </form>
-
-      {% endif %}
-
-      {% endif %}
-      <br>
-    <div class="container-fluid">
-      <table class="table table-hover" id="avaliable-resources">
-      <tr>
-        <th>{{ _("Avaliable Items:") }}</th>
-      </tr>
-      {% if item_donations is none %}
-      </table>
-      <p> {{ _("Could not find any items") }} </p>
-
+  <hr>
+  {% if charity_campaign is defined %}
+  <h3>{{ _("Select the aid campaign you wish to manage") }}</h3>
+  <form class="my-3" method="post">
+    <select class="form-select mb-3" name="curr_charity_campaign">
+      {% for campaign in organization.charity_campaigns %}
+      {% if campaign.name == charity_campaign.name %}
+      <option value="{{ campaign.id }}" selected>{{campaign.name}}</option>
       {% else %}
-      <tr>
-        <td>{{ _("Lp") }} </td>
-        <td>{{ _("Resource type:") }} </td>
-        <td>{{ _("Number") }} </td>
-      </tr>
-      {% for donation in item_donations %}
+      <option value="{{ campaign.id }}">{{campaign.name}}</option>
+      {% endif %}
+      {% endfor %}
+    </select>
+    <input class="btn btn-secondary" type="submit" value='{{ _("Select charity campaign") }}'>
+  </form>
+  <hr>
+  <h4 class="my-4">{{ _("Managing Campaign") }}: <strong>{{ charity_campaign.name }}</strong></h4>
+  <h4 class="my-4">{{ _("Account Balance") }}: <strong>{{ account_balance or 0 }}</strong></h4>
+  {% endif %}
 
+  <!-- ITEM DONATIONS -->
+  <div id="avaliable-resources">
+    <h4>{{ _("Avaliable Items:") }}</h4>
+    {% if item_donations is none %}
+    <p> {{ _("Could not find any items") }} </p>
+    {% else %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>{{ _("Lp") }}</th>
+          <th>{{ _("Resource type:") }}</th>
+          <th>{{ _("Amount") }}</th>
+          <th>{{ _("Aid Campaign") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for donation in item_donations %}
         <tr>
           <td>{{ loop.index }}</td>
-          <td>{{ donation.type }}</td>
+          <td>{{ donation.item_type.type }}</td>
           <td>{{ donation.amount }}</td>
+          <td>{{ donation.organization_charity_campaign.charity_campaign.name }}</td>
         </tr>
-
-      {% endfor %}
-      </table>
-      {% endif %}
-
-      <table class="table table-hover" id="pending-requests">
-        <tr>
-          <th>{{ _("Current requests:") }} </th>
-        </tr>
-    
-        {% if current_requests is none %}
-        </table>
-        <p>{{ _("Could not find any requests") }} </p>
-    
-        {% else %}
-        <tr>
-          <td>{{ _("Lp") }} </td>
-          <td>{{ _("Name") }}</td>
-          <td>{{ _("Status") }}</td>
-          <td>{{ _("Affected") }}  </td>
-          <td>{{ _("Address") }} </td>
-          <td>{{ _("Needs") }}</td>
-          <td>{{ _("Amount") }}</td>
-          
-        </tr>
-        {% for curr_request in current_requests %}
-        {% if curr_request.status == request_status.PENDING %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ curr_request.name }}</td>
-            <td>{{ curr_request.status.value }}</td>
-            <td>
-              <table class="table table-hover">
-                <tr>
-                  <td>{{ _("First name:") }}</td>
-                  <td>{{ curr_request.first_name }}</td>
-                </tr>
-                <tr>
-                  <td>{{ _("Last name") }}  </td>
-                  <td> {{ curr_request.last_name }} </td>
-                </tr>
-              </table>
-            </td>
-            <td>
-              <table>
-                <tr>
-                  <td>{{ _("City") }}:</td>
-                  <td>{{ curr_request.city }}</td>
-                </tr>
-                <tr>
-                  <td>{{ _("Street") }}  </td>
-                  <td> {{ curr_request.street }} </td>
-                </tr>
-              </table>
-            </td>
-            <td>{{ curr_request.type }}</td>
-            <td> {{curr_request.amount}} </td>
-            <td>
-              <a class="btn btn-primary" href="{{ url_for('supply_chain.manage_request', req_id=curr_request.id) }}">
-              {{ _("Manage request") }}
-          </a>
-            </td>
-          </tr>
-        {% endif %}
         {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
 
-      </table>
-        {% endif %}
-
-        <table class="table table-hover" id="donated-items">
-          <tr>
-            <th colspan="6">{{ _("Donation history: ") }} </th>
-          </tr>
-
-          {% if current_requests is none %}
-          </table>
-          <p>{{ _("Could not find any requests") }} </p>
-      
-          {% else %}
-          <tr>
-            <td>{{ _("Lp") }} </td>
-            <td>{{ _("Description") }}</td>
-            <td>{{ _("Amount") }}  </td>
-            <td>{{ _("Item type") }}  </td>
-            <td>{{ _("Date") }} </td>
-            <td>{{ _("Donor") }}</td>
-          </tr>
-          {% for donation in donation_item_history %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ donation.description }}</td>
-              <td>{{ donation.amount }}</td>
-              <td>{{ donation.type }}</td>
-              <td>{{ donation.DonationItem.donation_date }}</td>
-              <td>{{ donation.name}}  {{donation.surname}}</td>
-            </tr>
-          {% endfor %}
-    
-        </table>
-          {% endif %}
-
-
-          <table class="table table-hover" id="donated-money">
-            <tr>
-              <th colspan="6">{{ _("Money donation history: ") }} </th>
-            </tr>
-
-            {% if current_requests is none %}
+  <!-- AFFECTED REQUESTS -->
+  <div id="pending-requests">
+    <h4>{{ _("Current requests:") }} </h4>
+    {% if organization_charity_campaign.requests %}
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>{{ _("Lp") }} </th>
+          <th>{{ _("Name") }}</th>
+          <th>{{ _("Status") }}</th>
+          <th>{{ _("Affected") }} </th>
+          <th>{{ _("Address") }} </th>
+          <th>{{ _("Needs") }}</th>
+          <th>{{ _("Amount") }}</th>
+          <th>{{ _("Actions") }}</th>
+        </tr>
+      </thead>
+      {% for request in organization_charity_campaign.requests %}
+      {% if request.status.value == 'Pending' %}
+      <tbody>
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ request.name }}</td>
+          <td>{{ request.status.value }}</td>
+          <td>
+            <table class="table table-bordered">
+              <tr>
+                <th>{{ _("First name") }}</th>
+                <th>{{ _("Last name") }}</th>
+              </tr>
+              <tr>
+                <td>{{ request.affected.first_name }}</td>
+                <td> {{ request.affected.last_name }} </td>
+              </tr>
             </table>
-            <p>{{ _("Could not find any requests") }} </p>
-        
-            {% else %}
-            <tr>
-              <td>{{ _("Lp") }} </td>
-              <td>{{ _("Description") }}</td>
-              <td>{{ _("Amount") }}  </td>
-              <td>{{ _("Item type") }}  </td>
-              <td>{{ _("Date") }} </td>
-              <td>{{ _("Donor") }}</td>
-            </tr>
-            {% for donation in donation_money_history %}
+          </td>
+          <td>
+            <table class="table table-bordered">
               <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ donation.description }}</td>
-                <td>{{ donation.cashAmount }}</td>
-                <td>{{ donation.donation_type }}</td>
-                <td>{{ donation.donation_date }}</td>
-                <td>{{ donation.donor.name}}  {{donation.donor.surname}}</td>
+                <th>{{ _("City") }}</th>
+                <th>{{ _("Street") }}</th>
+                <th>{{ _("Street Number") }}</th>
               </tr>
-            {% endfor %}
-      
-          </table>
-            {% endif %}
-
-          <table class="table table-hover" id="request-history">
-            <thead>
               <tr>
-                <th scope="col" colspan="7">{{ _("Request history") }} </th>
+                <td>{{ request.address.city }}</td>
+                <td>{{ request.address.street }}</td>
+                <td>{{ request.address.street_number }}</td>
               </tr>
-            </thead>      
-            {% if current_requests is none %}
             </table>
-            <p>{{ _("Could not find any requests in the history") }} </p>
-        
-            {% else %}
-            <tbody>
+          </td>
+          <td>{{ request.donation_type.type }}</td>
+          <td>{{ request.amount }}</td>
+          <td>
+            <a class="btn btn-primary" href="{{ url_for('supply_chain.manage_request', req_id=request.id) }}">
+              {{ _("Manage request") }}
+            </a>
+          </td>
+        </tr>
+      </tbody>
+      {% endif %}
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>{{ _("Could not find any requests") }} </p>
+    {% endif %}
+  </div>
+
+  <!-- ITEM DONATIONS HISTORY -->
+  <div id="donated-items">
+    <h4>{{ _("Donation history: ") }}</h4>
+    {% if organization_charity_campaign.donations_item %}
+    <table class="table table-hover" id="donated-items">
+      <thead>
+        <tr>
+          <th>{{ _("Lp") }}</th>
+          <th>{{ _("Description") }}</th>
+          <th>{{ _("Amount") }}</th>
+          <th>{{ _("Item type") }}</th>
+          <th>{{ _("Date") }}</th>
+          <th>{{ _("Donor") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for donation in organization_charity_campaign.donations_item %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ donation.description }}</td>
+          <td>{{ donation.amount }}</td>
+          <td>{{ donation.donation_type.type }}</td>
+          <td>{{ donation.donation_date }}</td>
+          <td>{{ donation.donor.first_name }} {{donation.donor.last_name}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>{{ _("Could not find any requests") }}</p>
+    {% endif %}
+  </div>
+
+  <!-- MONEY DONATIONS HISTORY -->
+  <div id="donated-money">
+    <h4>{{ _("Money donation history: ") }}</h4>
+    {% if organization_charity_campaign.donations_money %}
+    <table class="table table-hover">
+      <tr>
+        <th>{{ _("Lp")}} </th>
+        <th>{{ _("Description")}}</th>
+        <th>{{ _("Amount") }}</th>
+        <th>{{ _("Item type") }}</th>
+        <th>{{ _("Date") }} </th>
+        <th>{{ _("Donor") }}</th>
+      </tr>
+      {% for donation in organization_charity_campaign.donations_money %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ donation.description }}</td>
+        <td>{{ donation.cashAmount }}</td>
+        <td>{{ donation.donation_type }}</td>
+        <td>{{ donation.donation_date }}</td>
+        <td>{{ donation.donor.name}} {{donation.donor.surname}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>{{ _("Could not find any historical money donations.") }} </p>
+    {% endif %}
+  </div>
+
+  <!-- REQUESTS HISTORY -->
+  <div id="request-history">
+    <h4>{{ _("Request history") }}</h4>
+    {% if organization_charity_campaign.requests %}
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>{{ _("Lp") }} </th>
+          <th>{{ _("Name") }}</th>
+          <th>{{ _("Status") }}</th>
+          <th>{{ _("Affected") }} </th>
+          <th>{{ _("Address") }} </th>
+          <th>{{ _("Needs") }}</th>
+          <th>{{ _("Amount") }}</th>
+        </tr>
+      </thead>
+      {% for request in organization_charity_campaign.requests %}
+      {% if request.status.value == 'Completed' %}
+      <tbody>
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ request.name }}</td>
+          <td>{{ request.status.value }}</td>
+          <td>
+            <table class="table table-bordered">
               <tr>
-                <td>{{ _("Lp") }} </td>
-                <td>{{ _("Name") }}</td>
-                <td>{{ _("Status") }}</td>
-                <td>{{ _("Affected") }} </td>
-                <td>{{ _("Address") }} </td>
-                <td>{{ _("Needs") }}</td>
-                <td>{{ _("Amount") }}</td>
-                
+                <th>{{ _("First name") }}</th>
+                <th>{{ _("Last name") }}</th>
               </tr>
-              {% for curr_request in current_requests %}
-              {% if curr_request.status == request_status.COMPLETED %}
-                <tr>
-                  <td>{{ loop.index }}</td>
-                  <td>{{ curr_request.name }}</td>
-                  <td>{{ curr_request.status.value }}</td>
-                  <td>
-                    <table class="table">
-                      <tr>
-                        <td>{{ _("First name:") }}</td>
-                        <td>{{ curr_request.first_name }}</td>
-                      </tr>
-                      <tr>
-                        <td>{{ _("Last name") }}  </td>
-                        <td> {{ curr_request.last_name }} </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td>
-                    <table>
-                      <tr>
-                        <td>{{ _("City") }}:</td>
-                        <td>{{ curr_request.city }}</td>
-                      </tr>
-                      <tr>
-                        <td>{{ _("Street") }}  </td>
-                        <td> {{ curr_request.street }} </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td>{{ curr_request.type }}</td>
-                  <td> {{curr_request.amount}} </td>
-                </tr>
-              {% endif %}
-              {% endfor %}
-            </tbody>
-          </table>
-            {% endif %}
-      </div>
+              <tr>
+                <td>{{ request.affected.first_name }}</td>
+                <td>{{ request.affected.last_name }}</td>
+              </tr>
+            </table>
+          </td>
+          <td>
+            <table class="table table-bordered">
+              <tr>
+                <th>{{ _("City") }}</th>
+                <th>{{ _("Street") }}</th>
+                <th>{{ _("Street Number") }}</th>
+              </tr>
+              <tr>
+                <td>{{ request.address.city }}</td>
+                <td>{{ request.address.street }}</td>
+                <td>{{ request.address.street_number }}</td>
+              </tr>
+            </table>
+          </td>
+          <td>{{ request.donation_type.type }}</td>
+          <td>{{ request.amount }}</td>
+        </tr>
+      </tbody>
+      {% endif %}
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>{{ _("Could not find any historical requests.") }} </p>
+    {% endif %}
+  </div>
 </div>
+{% endblock %}
+{% block ascript %}
+<script>
+  const VIEW = {
+    AVALIABLE_RESOURCES: 'avaliable-resources',
+    DONATED_ITEMS: 'donated-items',
+    DONATED_MONEY: 'donated-money',
+    PENDING_REQUESTS: 'pending-requests',
+    REQUEST_HISTORY: 'request-history',
+    AVALIABLE_MONEY: 'avaliable-money'
+  }
+
+  let hideAllItems = function () {
+    for (let value in VIEW) {
+      console.log(VIEW[value])
+      let currElement = document.getElementById(VIEW[value]);
+      if (currElement) {
+        currElement.style['display'] = 'none';
+      }
+    }
+  }
+
+  let changeView = function (view) {
+    if (typeof (VIEW, view)) {
+      hideAllItems();
+      console.log(view)
+      let currElement = document.getElementById(view);
+      if (currElement) {
+        currElement.style['display'] = 'block';
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    hideAllItems()
+    changeView(VIEW.AVALIABLE_RESOURCES)
+  }, false);
+</script>
 {% endblock %}

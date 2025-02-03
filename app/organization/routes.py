@@ -2,10 +2,12 @@ from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
 from flask_babel import gettext as _
 from flask_login import current_user
+from sqlalchemy.orm import joinedload
 
 from app.auth.user_service import roles_required
-from app.extensions import csrf, db
-from app.forms.charity_campaigns_wtf import CharityCampaignForm
+from app.extensions import db
+from app.forms.charity_campaigns_wtf import (CharityCampaignForm,
+                                             SignToCharityCampaignForm)
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -194,12 +196,18 @@ def list_my_charity_campaigns():
 
 @bp.route('/sign_to_charity_campaign', methods=['GET', 'POST'])
 @roles_required(['organization'])
-@csrf.exempt
 def sign_to_charity_campaign():
+    form = SignToCharityCampaignForm()
     organization = db.session.scalar(db.select(Organization)
-                                     .where(Organization.user_id == current_user.organization.id))
-    if request.method == 'POST':
-        charity_campaign_id = request.form['charity_campaign_id']
+                                     .where(Organization.user_id == current_user.id))
+    stmt = db.select(CharityCampaign).options(joinedload(CharityCampaign.organizations))
+    charity_campaigns = db.session.scalars(stmt).unique().all()
+    form.charity_campaign_id.choices = [
+        (campaign.id, campaign.name) for campaign in charity_campaigns if organization not in campaign.organizations
+    ]
+
+    if form.validate_on_submit():
+        charity_campaign_id = form.charity_campaign_id.data
         charity_campaign = db.session.get(CharityCampaign, charity_campaign_id)
         new_organization_campaign = OrganizationCharityCampaign(organization=organization,
                                                                 charity_campaign=charity_campaign)
@@ -207,10 +215,8 @@ def sign_to_charity_campaign():
         db.session.add(new_organization_campaign)
         db.session.commit()
         return redirect(url_for('organization.list_organization_charity_campaigns'))
-    charity_campaigns = db.session.scalars(db.select(CharityCampaign)).all()
-    charity_campaigns = [campaign for campaign in charity_campaigns if organization not in campaign.organizations]
-    return render_template('sign_to_charity_campaign.jinja',
-                           charity_campaigns=charity_campaigns)
+
+    return render_template('sign_to_charity_campaign.jinja', form=form)
 
 
 @bp.route('/charity_campaign/<int:organization_charity_campaign_id>/tasks/create', methods=['GET', 'POST'])
