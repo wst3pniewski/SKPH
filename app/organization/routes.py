@@ -4,7 +4,8 @@ from flask_babel import gettext as _
 from flask_login import current_user
 
 from app.auth.user_service import roles_required
-from app.extensions import db
+from app.extensions import csrf, db
+from app.forms.charity_campaigns_wtf import CharityCampaignForm
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -138,15 +139,16 @@ def manage_charity_campaign(charity_campaign_id):
 @bp.route('/create_charity_campaign', methods=['GET', 'POST'])
 @roles_required(['authorities'])
 def create_charity_campaign():
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
+    form = CharityCampaignForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
         authority = db.session.scalar(db.select(Authorities).where(Authorities.user_id == current_user.id))
         new_campaign = CharityCampaign(name=name, description=description, authority=authority)
         db.session.add(new_campaign)
         db.session.commit()
         return redirect(url_for('organization.list_charity_campaigns'))
-    return render_template('create_charity_campaign.jinja')
+    return render_template('create_charity_campaign.jinja', form=form)
 
 # =================== ORGANIZATIONS ===================
 
@@ -192,6 +194,7 @@ def list_my_charity_campaigns():
 
 @bp.route('/sign_to_charity_campaign', methods=['GET', 'POST'])
 @roles_required(['organization'])
+@csrf.exempt
 def sign_to_charity_campaign():
     organization = db.session.scalar(db.select(Organization)
                                      .where(Organization.user_id == current_user.organization.id))
@@ -201,7 +204,6 @@ def sign_to_charity_campaign():
         new_organization_campaign = OrganizationCharityCampaign(organization=organization,
                                                                 charity_campaign=charity_campaign)
         charity_campaign.organizations.append(organization)
-
         db.session.add(new_organization_campaign)
         db.session.commit()
         return redirect(url_for('organization.list_organization_charity_campaigns'))

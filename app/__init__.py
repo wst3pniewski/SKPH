@@ -11,7 +11,6 @@ from app.communication.socketio_chat import socketio
 from app.donors.routes import bp as donors_bp
 from app.extensions import babel, db, get_locale, mail, csrf
 from app.maps.routes import bp as maps_bp
-from app.models.donation import DonationType
 from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
 from app.volunteers.routes import bp as volunteers_bp

@@ -1,13 +1,15 @@
 from datetime import date
 
-from flask import (Blueprint, abort, flash, redirect, render_template,
-                   url_for, request)
+from flask import (Blueprint, abort, flash, redirect, render_template, request,
+                   url_for)
 from flask_login import current_user
+
 from app.auth.user_service import roles_required
-from app.extensions import db
+from app.extensions import csrf, db
 from app.models.address import Address
 from app.models.authorities import Authorities
-from app.models.charity_campaign import OrganizationCharityCampaign, CharityCampaign
+from app.models.charity_campaign import (CharityCampaign,
+                                         OrganizationCharityCampaign)
 from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
@@ -39,11 +41,9 @@ def fetch_donors():
     return render_template('donor_view.jinja', donors=donors.all())
 
 
-# TODO: Link the donation to a specific charity campaign
-
-
 @bp.route('/donation/create', methods=['GET', 'POST'])
 @roles_required(['donor'])
+@csrf.exempt
 def create_donation():
     donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
     charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
@@ -112,7 +112,7 @@ def create_donation():
             flash('Donation created successfully')
             del new_donation_item
 
-        return redirect(url_for('donors.index', donor_id=donor.donor_id))
+        return redirect(url_for('home', donor_id=donor.donor_id))
     return render_template('create_donation.jinja',
                            charity_campaigns=charity_campaigns,
                            ItemDonationType=donation_type)

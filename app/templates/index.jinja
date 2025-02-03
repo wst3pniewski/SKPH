@@ -12,6 +12,7 @@
       enabling effective coordination of emergency aid.""") }}
     </p>
   </div>
+  <!-- ADMIN -->
   {% if current_user.type == 'admin' %}
   <hr class="my-4">
   <h3>{{ _("Modules") }}</h3>
@@ -34,6 +35,15 @@
     <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('supply_chain.demo') }}">{{ _("Tracking and managing
       resources
       module") }}</a>
+  </div>
+  <div class="d-flex flex-column">
+    <hr>
+    <h3>{{ _("Admin") }}</h3>
+    <br>
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('auth.manage_users') }}">{{
+      _("Admin Dashboard") }}</a>
+    <br>
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.add_page') }}">{{ _("Maps Module") }}</a>
   </div>
   {% endif %}
   <!-- AUTHORITIES -->
@@ -98,18 +108,7 @@
       _("View your donations") }}</a>
   </div>
   {% endif %}
-  <!-- ADMIN -->
-  {% if current_user.type == 'admin' %}
-  <div class="d-flex flex-column">
-    <hr>
-    <h3>{{ _("Admin") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('auth.manage_users') }}">{{
-      _("Admin Dashboard") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.add_page') }}">{{ _("Maps Module") }}</a>
-  </div>
-  {% endif %}
+
   <!-- ORGANIZATION -->
   {% if current_user.type == 'organization' %}
   <div class="d-flex flex-column">
@@ -169,7 +168,7 @@
               <div class="display-4 text-primary mb-3">💝</div>
               <h3 class="card-title h4">Donate</h3>
               <p class="card-text text-muted mb-3">Support our efforts with monetary or material donations</p>
-              <a href="{{ url_for('auth.register', user_type='affected') }}" class="btn btn-primary">Make a Donation
+              <a href="{{ url_for('auth.register', user_type='donor') }}" class="btn btn-primary">Make a Donation
                 →</a>
             </div>
           </div>

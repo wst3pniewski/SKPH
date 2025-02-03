@@ -39,9 +39,11 @@ class OrganizationCharityCampaign(db.Model):
     organization = relationship('Organization')
     charity_campaign_id: Mapped[int] = mapped_column(ForeignKey('charity_campaign.id'), nullable=False)
     organization_id: Mapped[int] = mapped_column(ForeignKey('organization.id'), nullable=False)
-    volunteers = (
-        relationship('Volunteer', secondary=volunteer_campaign_association, back_populates='campaigns')
-    )
+    volunteers = relationship('Volunteer', secondary=volunteer_campaign_association, back_populates='campaigns')
     donations_money = relationship('DonationMoney', back_populates='charity_campaign')
     donations_item = relationship('DonationItem', back_populates='charity_campaign')
     item_stock = relationship('ItemStock', back_populates='organization_charity_campaign')
+    requests = relationship('Request', back_populates='charity_campaign')
+
+    def __repr__(self):
+        return f'<OrganizationCharityCampaign(charity_campaign_id={self.charity_campaign_id}, organization_id={self.organization_id})>'

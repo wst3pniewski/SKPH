@@ -6,43 +6,91 @@
 <div class="container mt-4">
     <section>
         <h2>{{ _("Your Profile") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item">
+        <div class="card mb-4">
+            <div class="card-body text-center">
                 <img src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
-                    alt="Profile Picture" class="rounded-circle" width="100" height="100">
-                <a href="{{ url_for('auth.setup_profile_picture') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-pencil-alt"></i>
-                </a>
-                {% if current_user.profile_picture %}
-                <form action="{{ url_for('auth.delete_profile_picture') }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>{{ _("Email:") }}</strong> {{ current_user.email }}</li>
-            {% block specific_user %}{% endblock %}
-            <li class="list-group-item">
-                <strong>{{ _("TOTP Status:") }}</strong>
-                {% if current_user.totp_secret %}
-                {{ _("Enabled") }}
-                <i class="fas fa-check text-success"></i>
-                <form action="{{ url_for('auth.remove_totp') }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger btn-sm">{{ _("Remove TOTP") }}</button>
-                </form>
-                {% else %}
-                {{ _("Disabled") }}
-                <i class="fas fa-times text-danger"></i>
-                <a href="{{ url_for('auth.setup_totp') }}" class="btn btn-primary btn-sm">{{ _("Setup TOTP") }}</a>
-                {% endif %}
-            </li>
-        </ul>
+                    height="250" width="250" class="rounded-circle mb-3" alt="Profile Picture">
+                <h5 class="mb-1">
+                    {{ current_user.email }}
+                    {% block approved %}{% endblock %}
+                </h5>
+                <p class="text-muted text-capitalize mb-1">{{ current_user.type }}</p>
+                <div class="container mt-3">
+                    <div class="row justify-content-center">
+                        <div class="col-2">
+                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#editPhotoModal">
+                                {{ _("Edit Photo") }}
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <div class="col-2">
+                            {% if current_user.profile_picture %}
+                            <form action="{{ url_for('auth.delete_profile_picture') }}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    {{ _("Delete Photo") }}
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <!-- Personal Information -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Personal Information</h5>
+                    <button class="btn btn-sm btn-primary">Edit</button>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">{{ _("Email") }}</label>
+                                <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                            </div>
+                        </div>
+                        {% block specific_user_form %}{% endblock %}
+                    </form>
+                </div>
+            </div>
+            <ul class="list-group">
+                {% block specific_user %}{% endblock %}
+            </ul>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">{{ _("Security Status") }}</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            {% if current_user.totp_secret %}
+                            <span class="badge bg-success">{{ _("2FA Enabled") }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ _("2FA Not Enabled") }}</span>
+                            {% endif %}
+                        </div>
+                        {% if not current_user.totp_secret %}
+                        <a href="{{ url_for('auth.setup_totp') }}" class="btn btn-success btn-sm">{{ _("Setup 2FA")
+                            }}</a>
+                        {% else %}
+                        <a href="{{ url_for('auth.remove_totp') }}" class="btn btn-danger btn-sm">{{ _("Remove 2FA")
+                            }}</a>
+                        {# <form action="{{ url_for('auth.remove_totp') }}" method="POST">
+                            {{ form.hidden_tag() }}
+                            <button type="submit" class="btn btn-danger">{{ _("Remove TOTP") }}</button>
+                        </form> #}
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        {{ _("Enhance your account security by enabling two-factor authentication") }}
+                    </small>
+                </div>
+            </div>
     </section>
     <br>
-    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-        {{ _("Edit Profile") }}
-    </button>
+    {% block additional_info %}{% endblock %}
 </div>
 
 <!-- Edit Profile Modal -->
@@ -58,6 +106,28 @@
                 <form id="editProfileForm">
                     {% block specific_user_edit_modal %}{% endblock %}
                     <button type="submit" class="btn btn-success">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editPhotoModal" tabindex="-1" aria-labelledby="editPhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPhotoModalLabel">{{ _("Edit Photo") }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadProfilePictureForm" action="{{ url_for('auth.setup_profile_picture') }}" method="post"
+                    enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">{{ _("Choose a profile picture") }}</label>
+                        <input class="form-control" type="file" id="file" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Discard") }}</button>
                 </form>
             </div>
         </div>

@@ -71,7 +71,12 @@
               {{ current_user.email }}
             </button>
             <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
+              {% if current_user.type != "admin" %}
               <a class="dropdown-item" href="{{ url_for('auth.profile') }}">{{ _("Profile") }}</a>
+              {% endif %}
+              {% if current_user.type == "admin" %}
+              <a class="dropdown-item" href="{{ url_for('auth.manage_users') }}">{{ _("Dashboard") }}</a>
+              {% endif %}
               <hr class="dropdown-divider">
               <a class="dropdown-item" href="{{ url_for('auth.logout') }}">{{ _("Logout") }}</a>
             </div>

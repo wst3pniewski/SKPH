@@ -21,7 +21,8 @@ from app.auth.register_forms import (AffectedRegisterForm,
 from app.auth.reset_password_forms import (ResetPasswordForm,
                                            ResetPasswordRequestForm)
 from app.auth.user_service import roles_required, send_reset_password_email
-from app.extensions import db
+from app.extensions import csrf, db
+from app.forms.totp_wtf import RemoveTOTPForm, SetupTOTPForm, VerifyTOTPForm
 from app.models.address import Address
 from app.models.affected import Affected
 from app.models.authorities import Authorities
@@ -191,15 +192,16 @@ def login():
 @bp.route('/setup-totp', methods=['GET', 'POST'])
 @roles_required(['donor', 'authorities', 'organization', 'affected', 'volunteer'])
 def setup_totp():
+    form = SetupTOTPForm()
     if current_user.totp_secret:
         flash(_('TOTP is already set up.'), 'info')
         return redirect(url_for('auth.profile'))
 
-    if request.method == 'POST':
-        totp_code = request.form['totp_code']
+    if form.validate_on_submit():
+        totp_code = form.totp_code.data
         totp_secret = session.get('totp_secret')
         if not totp_secret:
-            flash(_('TOTP setup session expired. Please try again.'), 'warning')
+            flash(_('2FA setup session expired. Please try again.'), 'warning')
             return redirect(url_for('auth.setup_totp'))
 
         totp = pyotp.TOTP(totp_secret)
@@ -208,10 +210,10 @@ def setup_totp():
             current_user.totp_secret = totp_secret
             db.session.commit()
             session.pop('totp_secret', None)
-            flash(_('TOTP verified and saved. 2-fa set properly.'), 'success')
+            flash(_('TOTP verified and saved. 2FA is now active!'), 'success')
             return redirect(url_for('auth.profile'))
         else:
-            flash(_('Invalid TOTP code.'), 'danger')
+            flash(_('Invalid OTP code.'), 'danger')
             return redirect(url_for('auth.profile'))
     else:
         totp_secret = pyotp.random_base32()
@@ -219,33 +221,57 @@ def setup_totp():
         current_user.totp_secret = totp_secret
         totp_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(name=current_user.email, issuer_name='SKPH')
 
-        img = qrcode.make(totp_uri)
+        img = qrcode.make(data=totp_uri, border=1)
         buffered = BytesIO()
         img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
 
-        return render_template('setup_totp.jinja', qr_code=img_str)
+        return render_template('setup_totp.jinja', qr_code=img_str, form=form)
+
+
+@bp.route('/remove_totp', methods=['GET', 'POST'])
+@login_required
+def remove_totp():
+    form = RemoveTOTPForm()
+    if not current_user.totp_secret:
+        flash(_('2FA is not active.'), 'info')
+        return redirect(url_for('auth.profile'))
+
+    if form.validate_on_submit():
+        totp_code = form.totp_code.data
+        totp = pyotp.TOTP(current_user.totp_secret)
+
+        if totp.verify(totp_code):
+            current_user.totp_secret = None
+            db.session.commit()
+            flash(_('2FA has been removed.'), 'success')
+            return redirect(url_for('auth.profile'))
+        else:
+            flash(_('Invalid OTP code.'), 'danger')
+
+    return render_template('remove_totp.jinja', form=form)
 
 
 @bp.route('/verify-totp/<int:user_id>', methods=['GET', 'POST'])
 def verify_totp(user_id):
     user = User.query.get(user_id)
-    # if not user:
-    #     flash('User not found.', 'danger')
-    #     return redirect(url_for('login'))
+    form = VerifyTOTPForm()
+    if not user:
+        flash(_('User not found.'), 'danger')
+        return redirect(url_for('auth.login'))
 
-    if request.method == 'POST':
-        totp_code = request.form['totp_code']
+    if form.validate_on_submit():
+        totp_code = form.totp_code.data
         totp = pyotp.TOTP(user.totp_secret)
 
         if totp.verify(totp_code):
             login_user(user)
-            flash(_('TOTP verified. Logged in successfully.'), 'success')
+            flash(_('2FA verified successfully! You are logged in.'), 'success')
             return redirect(url_for('home'))
         else:
-            flash(_('Invalid TOTP code.'), 'danger')
+            flash(_('Invalid OTP code.'), 'danger')
 
-    return render_template('verify_totp.jinja')
+    return render_template('verify_totp.jinja', form=form)
 
 
 @bp.route('/reset_password', methods=['GET', 'POST'])
@@ -292,6 +318,7 @@ def register_choice():
 
 @bp.route('/manage_users', methods=['GET', 'POST'])
 @roles_required('admin')
+@csrf.exempt
 def manage_users():
     authorities = Authorities.query.all()
     organizations = Organization.query.all()
@@ -343,41 +370,29 @@ def profile():
     return redirect(role_urls[current_user.type])
 
 
-@bp.route('/remove_totp', methods=['GET', 'POST'])
-@login_required
-def remove_totp():
-    if not current_user.totp_secret:
-        flash(_('TOTP is not set up.'), 'info')
-        return redirect(url_for('auth.profile'))
-
-    current_user.totp_secret = None
-    db.session.commit()
-    flash(_('TOTP has been removed.'), 'success')
-    return redirect(url_for('auth.profile'))
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
 
-@bp.route('/setup_profile_picture', methods=['GET', 'POST'])
+@bp.route('/setup_profile_picture', methods=['POST'])
 @login_required
+@csrf.exempt
 def setup_profile_picture():
     if request.method == 'POST':
         if 'file' not in request.files:
             flash(_('No file part'), 'danger')
-            return redirect(request.url)
+            return redirect(url_for('auth.profile'))
         file = request.files['file']
         if file.filename == '':
             flash(_('No selected file'), 'danger')
-            return redirect(request.url)
+            return redirect(url_for('auth.profile'))
         if file and allowed_file(file.filename):
             if file.mimetype not in ['image/png', 'image/jpeg', 'image/gif']:
                 flash(_('Invalid file type. Only PNG, JPEG, and GIF are allowed.'), 'danger')
-                return redirect(request.url)
+                return redirect(url_for('auth.profile'))
             if len(file.read()) > 1 * 1024 * 1024:
                 flash(_('File size exceeds 1MB limit.'), 'danger')
-                return redirect(request.url)
+                return redirect(url_for('auth.profile'))
             file.seek(0)
             filename = secure_filename(file.filename)
             file_extension = filename.rsplit('.', 1)[1].lower()
@@ -391,11 +406,12 @@ def setup_profile_picture():
             db.session.commit()
             flash(_('Profile picture updated successfully.'), 'success')
             return redirect(url_for('auth.profile'))
-    return render_template('setup_profile_picture.jinja')
+    return redirect(url_for('auth.profile'))
 
 
 @bp.route('/delete_profile_picture', methods=['POST'])
 @login_required
+@csrf.exempt
 def delete_profile_picture():
     if current_user.profile_picture:
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_user.profile_picture)

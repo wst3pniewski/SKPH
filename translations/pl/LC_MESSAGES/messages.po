@@ -45,11 +45,11 @@ msgstr "TOTP jest już ustawione."
 
 #: app/auth/routes.py:196
 msgid "TOTP setup session expired. Please try again."
-msgstr ""
+msgstr "Błąd podczas kofiguracji 2FA. Proszę spróbować ponownie."
 
 #: app/auth/routes.py:205
 msgid "TOTP verified and saved. 2-fa set properly."
-msgstr "Sesja konfiguracji TOTP wygasła. Spróbuj ponownie."
+msgstr "Kod OTP zweryfikowano poprawnie - 2FA zostało aktywowane."
 
 #: app/auth/routes.py:208 app/auth/routes.py:240
 msgid "Invalid TOTP code."

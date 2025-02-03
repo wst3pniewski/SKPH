@@ -1,14 +1,18 @@
 {% extends "profile.jinja" %}
 
-{% block specific_user %}
-<li class="list-group-item"><strong>{{ _("First Name:") }}</strong> {{ donor.first_name }}</li>
-<li class="list-group-item"><strong>{{ _("Last Name:") }}</strong> {{ donor.last_name }}</li>
-<li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ donor.phone_number }}</li>
-{% endblock %}
-
-{% block specific_user_edit_modal %}
-<div class="mb-3">
-    <label for="phone_number" class="form-label">{{ _("Phone Number") }}</label>
-    <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ donor.phone_number }}">
+{% block specific_user_form %}
+<div class="row">
+    <div class="col-md-4">
+        <label class="form-label">{{ _("First Name:") }}</label>
+        <input type="text" class="form-control" value="{{ donor.first_name }}" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ _("Last Name:") }}</label>
+        <input type="text" class="form-control" value="{{ donor.last_name }}" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ _("Phone") }}</label>
+        <input type="tel" class="form-control" value="{{ donor.phone_number }}" readonly>
+    </div>
 </div>
 {% endblock %}

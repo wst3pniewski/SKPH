@@ -1,20 +1,54 @@
 {% extends "profile.jinja" %}
 
-{% block specific_user %}
-<li class="list-group-item"><strong>{{ _("Organization name:") }}</strong> {{ organization.organization_name
-    }}</li>
-<li class="list-group-item"><strong>{{ _("Description:") }}</strong> {{ organization.description }}</li>
-<li class="list-group-item"><strong>{{ _("Status:") }}</strong>
-    {% if organization.approved %}
-    <span class="badge text-bg-success">{{ _("Approved") }}</span>
-    {% else %}
-    <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
-    {% endif %}
-</li>
-<li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ organization.address.voivodeship }}
-<li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ organization.address.city }}</li>
-<li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ organization.address.street }}</li>
-<li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
-    {{organization.address.street_number}}
-</li>
+{% block approved %}
+{% if organization.approved %}
+<span class="badge text-bg-success">{{ _("Approved") }}</span>
+{% else %}
+<span class="badge text-bg-warning">{{ _("Not approved") }}</span>
+{% endif %}
+{% endblock %}
+{% block specific_user_form %}
+<div class="row">
+    <div class="col-md-12">
+        <label class="form-label">{{ _("Organization name") }}</label>
+        <input type="text" class="form-control" value="{{ organization.organization_name }}" readonly>
+    </div>
+    {# <div class="col-md-6">
+        <label class="form-label">{{ _("Phone") }}</label>
+        <input type="tel" class="form-control" value="+1 (555) 123-4567" readonly>
+    </div> #}
+</div>
+<div class="row mt-3">
+    <h6 class="mb-3">{{ _("Address Details") }}</h6>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">{{ _("Street") }}</label>
+            <input type="text" class="form-control" value="{{ organization.address.street }}" readonly>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">{{ _("Street Number") }}</label>
+            <input type="text" class="form-control" value="{{ organization.address.street_number }}" readonly>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">{{ _("City") }}</label>
+            <input type="text" class="form-control" value="{{ organization.address.city }}" readonly>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">{{ _("Voivodeship") }}</label>
+            <input type="text" class="form-control" value="{{ organization.address.voivodeship }}" readonly>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">{{ _("ZIP Code") }}</label>
+            <input type="text" class="form-control" value="00-001" readonly>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <h6 class="mb-3">{{ _("Description") }}</h6>
+        <div class="col-12">
+            <textarea class="form-control" readonly>{{ organization.description }}</textarea>
+        </div>
+    </div>
+</div>
 {% endblock %}
