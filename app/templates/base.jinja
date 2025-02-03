@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" class="h-100" data-bs-theme="{{ session.get('theme', 'light') }}">
 
 <head>
   <meta charset="UTF-8">
@@ -15,7 +15,7 @@
   {% endblock %}
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
   <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
@@ -28,9 +28,7 @@
         <div class="collapse navbar-collapse" id="navbarColor01">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="{{ url_for('home') }}">{{ _("Home") }}
-                <span class="sr-only">(current)</span>
-              </a>
+              <a class="nav-link" href="{{ url_for('home') }}">{{ _("Home") }}</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('organization.list_charity_campaigns') }}">{{ _("Campaigns") }}</a>
@@ -47,13 +45,10 @@
             </li>
             {% endif %}
           </ul>
-          <button id="theme-toggle" class="btn btn-outline-secondary">
-            <i id="theme-icon" class="fas fa-moon"></i>
-          </button>
           <form action="{{ url_for('set_language') }}" method="post" class="d-flex ms-auto">
             <div class="dropdown">
-              <button class="btn btn-dark dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-dark dropdown-toggle mx-3" type="button" id="languageDropdown"
+                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 🌐 {{ _("Language") }}
               </button>
               <div class="dropdown-menu dropdown-menu-dark" aria-labelledby="languageDropdown">
@@ -63,9 +58,12 @@
               </div>
             </div>
           </form>
+          <button id="theme-toggle" class="btn btn-outline-secondary">
+            <i id="theme-icon" class="fas fa-moon"></i>
+          </button>
           {% if current_user.is_authenticated %}
           <div class="dropdown">
-            <button class="btn btn-dark dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown"
+            <button class="btn btn-dark dropdown-toggle mx-3" type="button" id="userDropdown" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <img
                 src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
@@ -104,7 +102,39 @@
     {% block content %} {% endblock %}
   </main>
 
-  {% block ascript %}{% endblock %}
+  <footer class="footer pb-3 mt-auto bg-dark text-white">
+    <div class="container-fluid text-center border-top border-danger border-3 border-primary-subtle pt-3">
+      <div class="row justify-content-around g-4">
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Emergency Contacts</h4>
+          <p class="mb-1">Emergency: 911</p>
+          <p class="mb-1">Hotline: 1-800-CRISIS</p>
+          <p class="mb-1">Support: help@crisis.org</p>
+        </div>
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Quick Links</h4>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">News & Updates</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">Training Resources</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Resources</h4>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white-50 text-decoration-none">Emergency Plans</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">Documentation</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">FAQs</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container text-center mt-4">
+      <span>&copy; 2025 SKPH. All rights reserved.</span>
+    </div>
+  </footer>
+
   <!-- JQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
     crossorigin="anonymous"></script>
@@ -120,19 +150,37 @@
       const themeIcon = document.getElementById('theme-icon');
       const htmlElement = document.documentElement;
 
+      // Set the initial icon state based on the current theme
+      if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+
       themeToggle.addEventListener('click', function () {
-        if (htmlElement.getAttribute('data-bs-theme') === 'light') {
-          htmlElement.setAttribute('data-bs-theme', 'dark');
-          themeIcon.classList.remove('fa-moon');
-          themeIcon.classList.add('fa-sun');
-        } else {
-          htmlElement.setAttribute('data-bs-theme', 'light');
-          themeIcon.classList.remove('fa-sun');
-          themeIcon.classList.add('fa-moon');
-        }
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        fetch('{{ url_for("auth.set_theme") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({ theme: newTheme })
+        }).then(response => {
+          if (response.ok) {
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeIcon.classList.toggle('fa-moon');
+            themeIcon.classList.toggle('fa-sun');
+          }
+        });
       });
     });
   </script>
+  {% block ascript %}{% endblock %}
 </body>
 
 </html>

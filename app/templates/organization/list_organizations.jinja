@@ -21,9 +21,9 @@
                 <td>{{ organization.description }}</td>
                 <td>
                     {% if organization.approved %}
-                    <span class="badge badge-success">{{ _("Approved") }}</span>
+                    <span class="badge text-bg-success">{{ _("Approved") }}</span>
                     {% else %}
-                    <span class="badge badge-warning">{{ _("Not approved") }}</span>
+                    <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
                     {% endif %}
                 </td>
                 <td>{{ organization.address.street }} {{ organization.address.street_number }},

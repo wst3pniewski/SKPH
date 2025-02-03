@@ -35,11 +35,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -75,11 +75,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>

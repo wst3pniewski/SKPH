@@ -3,13 +3,15 @@
 {% block title %}{{ _("Crisis Management System") }}{% endblock %}
 
 {% block content %}
-<div class="container, m-4">
-  <h1 class="display-3">{{ _("Crisis Management System") }}</h1>
-  <p class="lead">
-    {{_("""The Crisis Management System is a web-based platform that brings authorities,
-    volunteers, aid organisations, affected and donors together in one place,
-    enabling effective coordination of emergency aid.""") }}
-  </p>
+<div class="container-fluid px-4 bg-body-secondary">
+  <div class="p-3">
+    <h1 class="display-2">{{ _("Crisis Management System") }}</h1>
+    <p class="lead">
+      {{_("""The Crisis Management System is a web-based platform that brings authorities,
+      volunteers, aid organisations, affected and donors together in one place,
+      enabling effective coordination of emergency aid.""") }}
+    </p>
+  </div>
   {% if current_user.type == 'admin' %}
   <hr class="my-4">
   <h3>{{ _("Modules") }}</h3>
@@ -62,7 +64,7 @@
       _("Create request") }}</a>
     <br>
     <a class="btn btn-primary btn-lg mb-"
-      href="{{ url_for('affected.affected_details', affected_id=current_user.affected.id) }}">{{
+      href="{{ url_for('affected.my_details', affected_id=current_user.affected.id) }}">{{
       _("Manage requests") }}</a>
   </div>
   {% endif %}
@@ -128,4 +130,89 @@
   </div>
   {% endif %}
 </div>
+{% if current_user.is_authenticated == False %}
+<div class="text-center">
+  <!-- Stakeholder Cards -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-4">
+        <!-- Affected People -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="display-4 text-danger mb-3">🆘</div>
+              <h3 class="card-title h4">Need Help?</h3>
+              <p class="card-text text-muted mb-3">Register your needs and get immediate support from our network</p>
+              <a href="{{ url_for('auth.register', user_type='affected') }}" class="btn btn-primary">Get Help →</a>
+            </div>
+          </div>
+        </div>
+        <!-- Volunteers -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="display-4 text-success mb-3">🦸</div>
+              <h3 class="card-title h4">Volunteer</h3>
+              <p class="card-text text-muted mb-3">Join our volunteer network and help those in need</p>
+              <a href="{{ url_for('auth.register', user_type='volunteer') }}" class="btn btn-primary">Register as
+                Volunteer
+                →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mt-3">
+        <!-- Donors -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="display-4 text-primary mb-3">💝</div>
+              <h3 class="card-title h4">Donate</h3>
+              <p class="card-text text-muted mb-3">Support our efforts with monetary or material donations</p>
+              <a href="{{ url_for('auth.register', user_type='affected') }}" class="btn btn-primary">Make a Donation
+                →</a>
+            </div>
+          </div>
+        </div>
+        <!-- Authorities -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="display-4 text-purple mb-3">👮</div>
+              <h3 class="card-title h4">{{ _("Authorities") }}</h3>
+              <p class="card-text text-muted mb-3">{{ _("Official portal for emergency responders and authorities") }}
+              </p>
+              <a href="{{ url_for('auth.register', user_type='authorities') }}" class="btn btn-primary">
+                {{ _("Authority Login") }} →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endif %}
+<!-- Live Updates -->
+<section class="bg-body-secondary py-5">
+  <div class="container">
+    <h2 class="text-center mb-4">Live Emergency Updates</h2>
+    <div class="card">
+      <div class="card-body">
+        <div class="border-start border-4 border-danger p-3 mb-3">
+          <small class="text-muted d-block">2 minutes ago</small>
+          <p class="mb-0 fw-bold">Urgent: Medical supplies needed in Downtown Area</p>
+        </div>
+        <div class="border-start border-4 border-warning p-3 mb-3">
+          <small class="text-muted d-block">15 minutes ago</small>
+          <p class="mb-0 fw-bold">Weather Alert: Heavy rainfall expected in Northern District</p>
+        </div>
+        <div class="border-start border-4 border-success p-3">
+          <small class="text-muted d-block">1 hour ago</small>
+          <p class="mb-0 fw-bold">Update: Emergency shelter opened at Community Center</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

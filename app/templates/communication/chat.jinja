@@ -6,7 +6,7 @@
 <div class="container mt-4">
   <div>
     <h2>{{ _("Find a user") }}</h2>
-    <input type="text" id="search-users" placeholder="{{ _('Search') }}">
+    <input type="text" class="form-control" id="search-users" placeholder="{{ _('Search') }}">
     <hr>
     <ul id="user-list" class="list-group" style="display: none;"></ul>
   </div>
@@ -37,7 +37,6 @@
 {% endblock %}
 
 {% block ascript %}
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
 
 <script>
@@ -96,8 +95,8 @@
             const profilePicture = msg.sender_profile_picture ? `uploads/${msg.sender_profile_picture}` : 'uploads/base_profile_picture.jpg';
             messagesDiv.append(
               `<div class="d-flex align-items-start mb-2">
-                <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-2" width="25" height="25">
-                <div>
+                <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-4" width="25" height="25">
+                <div class='ml-2'>
                   <p><strong>${msg.sender}:</strong> ${msg.content} <small>(${msg.timestamp})</small></p>
                 </div>
               </div>`

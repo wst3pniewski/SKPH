@@ -5,9 +5,9 @@
 <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ authorities.phone }}</li>
 <li class="list-group-item"><strong>{{ _("Approved:") }}</strong>
     {% if authorities.approved %}
-    <span class="badge badge-success">{{ _("Approved") }}</span>
+    <span class="badge text-bg-success">{{ _("Approved") }}</span>
     {% else %}
-    <span class="badge badge-warning">{{ _("Not approved") }}</span>
+    <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
     {% endif %}
 </li>
 <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ authorities.address.voivodeship }}
