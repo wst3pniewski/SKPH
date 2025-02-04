@@ -29,7 +29,7 @@ def index():
 
 # =================== CHARITY CAMPAIGNS ===================
 
-@bp.route('/charity_campaigns')
+@bp.route('/charity-campaigns')
 def list_charity_campaigns():
     page = request.args.get('page', 1, type=int)  # Get the page number from the query params (default to 1)
     per_page = 10
