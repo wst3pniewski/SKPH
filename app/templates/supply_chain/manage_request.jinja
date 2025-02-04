@@ -65,7 +65,7 @@
     {{ form.hidden_tag() }}
     <div class="mb-3">
       {{ form.donation_amount.label(class="form-label") }}
-      {{ form.donation_amount(class="form-control", min=curr_request.amount, max=stock_item.amount,
+      {{ form.donation_amount(class="form-control", min=curr_request.amount, max=curr_request.amount,
       value=curr_request.amount) }}
       {% for error in form.donation_amount.errors %}
       <div class="text-danger">{{ error }}</div>

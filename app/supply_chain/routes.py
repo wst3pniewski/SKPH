@@ -106,14 +106,16 @@ def manage_request(request_id):
         return redirect(url_for('supply_chain.index'))
 
     curr_charity_campaign = OrganizationCharityCampaign.query.get(curr_request_data.charity_campaign_id)
-    stock_item = ItemStock.query \
-        .join(DonationType, ItemStock.item_type_id == DonationType.id) \
-        .filter(ItemStock.organization_charity_campaign_id == curr_charity_campaign.id) \
-        .first()
+    stock_item = ItemStock.query.filter(ItemStock.item_type_id == curr_request_data.donation_type.id,
+                                        ItemStock.organization_charity_campaign == curr_charity_campaign).first()
+    # stock_item = ItemStock.query \
+    #     .join(DonationType, ItemStock.item_type_id == DonationType.id) \
+    #     .filter(ItemStock.organization_charity_campaign_id == curr_charity_campaign.id) \
+    #     .first()
 
     from flask_babel import gettext as _
     form = ManageRequestForm()
-    form.donation_type.choices = [(dt.id, _(dt.type)) for dt in DonationType.query.all()]
+    form.donation_type.choices = [(curr_request_data.donation_type.id, _(curr_request_data.donation_type.type))]
 
     if form.validate_on_submit():
         if stock_item is None:
