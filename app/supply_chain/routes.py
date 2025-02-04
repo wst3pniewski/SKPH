@@ -41,7 +41,8 @@ def index():
     first_charity_campaign = selected_organization.charity_campaigns[0]
 
     stmt = db.select(OrganizationCharityCampaign) \
-        .filter(OrganizationCharityCampaign.charity_campaign_id == first_charity_campaign.id and OrganizationCharityCampaign.organization_id == selected_organization.id)
+        .filter(OrganizationCharityCampaign.charity_campaign_id == first_charity_campaign.id,
+                OrganizationCharityCampaign.organization_id == selected_organization.id)
     org_char_camp = db.session.scalars(stmt).first()
 
     form.curr_charity_campaign.choices = [(cc.id, cc.name) for cc in selected_organization.charity_campaigns]
@@ -65,7 +66,8 @@ def index():
             return render_template('supply_chain.jinja', form=form)
 
         stmt = db.select(OrganizationCharityCampaign)\
-            .filter(OrganizationCharityCampaign.charity_campaign_id == curr_charity_campaign.id and OrganizationCharityCampaign.organization_id == curr_organization.id)
+            .filter(OrganizationCharityCampaign.charity_campaign_id == curr_charity_campaign.id,
+                    OrganizationCharityCampaign.organization_id == curr_organization.id)
         org_char_camp = db.session.scalars(stmt).first()
 
         item_donations = ItemStock.query \
@@ -108,10 +110,6 @@ def manage_request(request_id):
     curr_charity_campaign = OrganizationCharityCampaign.query.get(curr_request_data.charity_campaign_id)
     stock_item = ItemStock.query.filter(ItemStock.item_type_id == curr_request_data.donation_type.id,
                                         ItemStock.organization_charity_campaign == curr_charity_campaign).first()
-    # stock_item = ItemStock.query \
-    #     .join(DonationType, ItemStock.item_type_id == DonationType.id) \
-    #     .filter(ItemStock.organization_charity_campaign_id == curr_charity_campaign.id) \
-    #     .first()
 
     from flask_babel import gettext as _
     form = ManageRequestForm()
@@ -360,13 +358,13 @@ def create_authority(user):
     authority = Authorities(
         name="New York City Authority",
         phone="123-456-7890",
-        address_id=Address.query.filter(Address.street == "123 Main St" and Address.city == 'New York').first().id,
+        address_id=Address.query.filter(Address.street == "123 Main St", Address.city == 'New York').first().id,
         user_id=User.query.filter(User.email == "jane.smith234@example.com").first().id
     )
     authority2 = Authorities(
         name="Lodz City Authority",
         phone="123-45226-333",
-        address_id=Address.query.filter(Address.street == "123 Main St" and Address.city == 'New York').first().id,
+        address_id=Address.query.filter(Address.street == "123 Main St", Address.city == 'New York').first().id,
         user=user
     )
     lista.append(authority)
@@ -567,10 +565,10 @@ def add_data():
         status='PENDING',
         amount=10,
         address_id=Address.query.filter(
-            Address.street == "456 Elm St" and Address.street_number == 'Apt 202' and Address.city == 'Los Angeles')
+            Address.street == "456 Elm St", Address.street_number == 'Apt 202', Address.city == 'Los Angeles')
         .first().id,
         affected_id=Affected.query.filter(
-            Affected.first_name == 'John' and Affected.last_name == 'Affected').first().id,
+            Affected.first_name == 'John', Affected.last_name == 'Affected').first().id,
         donation_type_id=DonationType.query.filter(DonationType.type == 'Food').first().id
 
     )
