@@ -1,14 +1,10 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, SubmitField, FormField
-from wtforms.validators import DataRequired
 from flask_babel import _
+from flask_wtf import FlaskForm
+from wtforms import (FormField, IntegerField, SelectField, StringField,
+                     SubmitField)
+from wtforms.validators import DataRequired
 
-
-class AddressForm(FlaskForm):
-    street = StringField(_('Street'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Street")})
-    street_number = StringField(_('Street Number'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Street Number")})
-    city = StringField(_('City'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("City")})
-    voivodeship = StringField(_('Voivodeship'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Voivodeship")})
+from .address_wtf import AddressForm
 
 
 class CreateRequestForm(FlaskForm):
@@ -18,3 +14,8 @@ class CreateRequestForm(FlaskForm):
     address = FormField(AddressForm)
     charity_campaign_id = SelectField(_('Charity Campaign'), coerce=int, render_kw={"class": "form-control"})
     submit = SubmitField(_('Create Request'), render_kw={"class": "btn btn-primary mt-3"})
+
+
+class UpdateRequestStatusForm(FlaskForm):
+    status = SelectField(_('Status'), validators=[DataRequired()])
+    submit = SubmitField(_('Update'))

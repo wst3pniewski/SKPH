@@ -12,8 +12,7 @@ from app.models.authorities import Authorities
 from app.models.charity_campaign import CharityCampaign, OrganizationCharityCampaign
 from app.models.donation import DonationType
 from app.models.request import Request, RequestStatus
-from app.utils.forms import CreateRequestForm
-from app.forms.update_request_status_wtf import UpdateRequestStatusForm
+from app.forms.requests_wtf import UpdateRequestStatusForm, CreateRequestForm
 
 bp = Blueprint('affected', __name__,
                template_folder='../templates/affected',
@@ -126,8 +125,10 @@ def create_request():
     donation_types = [_('Food'), _('Clothes'), _('Shelter'), _('Medical Supplies')]
 
     form.needs.choices = [(dt.id, _(dt.type)) for dt in db.session.scalars(db.select(DonationType)).all()]
-    form.charity_campaign_id.choices = [(cc.id, (cc.charity_campaign.name, cc.organization.organization_name)) for cc in db.session.scalars(db.select(OrganizationCharityCampaign)).all()]
-
+    form.charity_campaign_id.choices = [
+        (cc.id, f"{cc.charity_campaign.name} - {cc.organization.organization_name}")
+        for cc in db.session.scalars(db.select(OrganizationCharityCampaign)).all()
+    ]
     if form.validate_on_submit():
         name = form.name.data
         status = RequestStatus.PENDING

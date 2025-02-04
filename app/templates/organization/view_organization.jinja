@@ -1,36 +1,31 @@
 {% extends "base.jinja" %}
 
-{% block title %}Organization{% endblock %}
+{% block title %}{{ _("Organization Information") }}{% endblock %}
 
 {% block content %}
-<div class="container mt-2">
-    <h1>Organization</h1>
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
-            <th scope="col">Approved</th>
-            <th scope="col">Address ID</th>
-            <th scope="col">Street</th>
-            <th scope="col">Street number</th>
-            <th scope="col">City</th>
-            <th scope="col">Voivodeship</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>{{ organization.id }}</td>
-            <td>{{ organization.organization_name }}</td>
-            <td>{{ organization.description}}</td>
-            <td>{{ organization.approved }}</td>
-            <td>{{ organization.address_id }}</td>
-            <td>{{ organization.address.street }}</td>
-            <td>{{ organization.address.street_number}}</td>
-            <td>{{ organization.address.city}}</td>
-            <td>{{ organization.address.voivodeship}}</td>
-        </tr>
-    </table>
+<div class="container my-4 d-flex justify-content-center">
+    <section>
+        <h2 class="text-center">{{ _("Organization Information") }}</h2>
+        <div class="card" style="width: 30rem;">
+            <img src="{{ url_for('static', filename='uploads/' ~ (organization.user.profile_picture or 'base_profile_picture.jpg')) }}"
+                alt="Profile Picture" class="rounded-circle mx-auto d-block mt-3" width="120" height="120">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ organization.organization_name }}</h5>
+                <p class="card-text"><strong>{{ _("Description") }}:</strong> {{ organization.description }}</p>
+                <p class="card-text"><strong>{{ _("Status") }}:</strong>
+                    {% if organization.approved %}
+                    <span class="badge text-bg-success">{{ _("Approved") }}</span>
+                    {% else %}
+                    <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
+                    {% endif %}
+                </p>
+                <p class="card-text"><strong>{{ _("Voivodeship") }}:</strong> {{ organization.address.voivodeship }}</p>
+                <p class="card-text"><strong>{{ _("City") }}:</strong> {{ organization.address.city }}</p>
+                <p class="card-text"><strong>{{ _("Street") }}:</strong> {{ organization.address.street }}</p>
+                <p class="card-text"><strong>{{ _("Street number") }}:</strong> {{ organization.address.street_number }}
+                </p>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

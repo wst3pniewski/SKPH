@@ -1,3 +1,4 @@
+from flask import session
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
 from flask_babel import gettext as _
@@ -31,7 +32,7 @@ def index():
 
 @bp.route('/charity-campaigns')
 def list_charity_campaigns():
-    page = request.args.get('page', 1, type=int)  # Get the page number from the query params (default to 1)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     pagination = db.paginate(db.select(CharityCampaign), page=page, per_page=per_page, error_out=False)
     return render_template('list_all_charity_campaigns.jinja',
@@ -48,11 +49,15 @@ def list_organization_charity_campaigns():
 
 @bp.route('charity-campaigns/<int:charity_campaign_id>')
 def list_signed_organizations(charity_campaign_id):
+    if 'original_referrer' not in session:
+        session['original_referrer'] = request.referrer
     organization_charity_campaigns = (
         db.session.scalars(db.select(OrganizationCharityCampaign)
                            .where(OrganizationCharityCampaign.charity_campaign_id == charity_campaign_id)))
+    original_referrer = session.get('original_referrer')
     return render_template('list_organization_charity_campaigns.jinja',
-                           organization_charity_campaigns=organization_charity_campaigns)
+                           organization_charity_campaigns=organization_charity_campaigns,
+                           referrer=original_referrer)
 
 
 @bp.route('charity-campaign/<int:charity_campaign_id>')
@@ -172,7 +177,7 @@ def selected_organization_profile(organization_id):
 
 @bp.route('/organizations')
 def list_organizations():
-    page = request.args.get('page', 1, type=int)  # Get the page number from the query params (default to 1)
+    page = request.args.get('page', 1, type=int)
     per_page = 10
     pagination = db.paginate(db.select(Organization), page=page, per_page=per_page, error_out=False)
     return render_template('list_organizations.jinja',
@@ -182,9 +187,11 @@ def list_organizations():
 
 @bp.route('/organization/<int:organization_id>')
 def view_organization(organization_id):
-    o1 = db.session.get(Organization, organization_id)
+    organization = db.session.get(Organization, organization_id)
+    referrer = request.referrer
     return render_template('view_organization.jinja',
-                           organization=o1)
+                           organization=organization,
+                           referrer=referrer)
 
 
 @bp.route('/organization-charity-campaigns')
