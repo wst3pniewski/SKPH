@@ -32,7 +32,7 @@ def chat():
     return render_template('communication/chat.jinja', user=user, chat_users=chat_users)
 
 
-@bp.route('/search_users')
+@bp.route('/search-users')
 def search_users():
     current_email = request.args.get('current_email')
     query = request.args.get('query', '')
@@ -44,7 +44,7 @@ def search_users():
     return jsonify([{'email': user.email} for user in users])
 
 
-@bp.route('/get_messages')
+@bp.route('/get-messages')
 def get_messages():
     sender_email = request.args.get('sender')
     receiver_email = request.args.get('receiver')
@@ -70,7 +70,7 @@ def get_messages():
     } for message in messages])
 
 
-@bp.route('/get_all_users')
+@bp.route('/get-all-users')
 def get_all_users():
     current_email = request.args.get('current_email')
     users = User.query.filter(User.email != current_email).all()

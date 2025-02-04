@@ -27,7 +27,7 @@ def index():
     return render_template('donors.jinja', samples_added=samples_added)
 
 
-@bp.route('donor/profile')
+@bp.route('/donor/profile')
 @roles_required(['donor'])
 def donor_profile():
     donor = db.session.get(Donor, current_user.donor.donor_id)
@@ -148,7 +148,7 @@ def confirm_point(donation_item_id):
     return redirect('/donors/donations')
 
 
-@bp.route('/confirmMoney/<int:id>', methods=['POST'])
+@bp.route('/confirm-money/<int:id>', methods=['POST'])
 def confirm_money(donation_money_id):
     donation = db.session.scalar(db.select(DonationMoney).filter(DonationMoney.donationMoney_id == donation_money_id))
     if not donation:

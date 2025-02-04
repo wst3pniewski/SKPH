@@ -46,7 +46,7 @@ def update_task_status(task_id):
     return render_template('update_task_status.jinja', task=task, form=form, referrer=referrer)
 
 
-@bp.route('volunteer/charity_campaign/<int:charity_campaign_id>/tasks')
+@bp.route('volunteer/charity-campaign/<int:charity_campaign_id>/tasks')
 @roles_required(['volunteer'])
 def list_tasks_by_charity_campaign(charity_campaign_id):
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))

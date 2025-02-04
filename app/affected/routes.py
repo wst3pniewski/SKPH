@@ -1,7 +1,7 @@
 from flask_babel import gettext as _
 from flask import (Blueprint, flash, redirect, render_template,
                    render_template_string, request, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 from flask_mailman import EmailMessage
 
 from app.auth.user_service import roles_required
@@ -13,6 +13,7 @@ from app.models.charity_campaign import CharityCampaign, OrganizationCharityCamp
 from app.models.donation import DonationType
 from app.models.request import Request, RequestStatus
 from app.utils.forms import CreateRequestForm
+from app.forms.update_request_status_wtf import UpdateRequestStatusForm
 
 bp = Blueprint('affected', __name__,
                template_folder='../templates/affected',
@@ -62,8 +63,7 @@ def index():
     return render_template('affected.jinja', samples_added=samples_added, affected=affected.all())
 
 
-@bp.route('/my_details')
-@login_required
+@bp.route('/my-details')
 @roles_required(['affected'])
 def my_details():
     affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
@@ -79,7 +79,6 @@ def my_details():
 
 
 @bp.route('/affected/<int:affected_id>')
-@login_required
 @roles_required(['organization', 'authorities'])
 def affected_details(affected_id):
     affected = db.get_or_404(Affected, affected_id)
@@ -90,14 +89,13 @@ def affected_details(affected_id):
 
 
 @bp.route('/all')
-@login_required
 @roles_required(['organization', 'authorities'])
 def fetch_all():
     affected = db.session.scalars(db.select(Affected))
     return render_template('all.jinja', affected=affected.all())
 
 
-@bp.route('/select_affected', methods=['GET', 'POST'])
+@bp.route('/select-affected', methods=['GET', 'POST'])
 def select_affected():
     if request.method == 'POST':
         affected_id = request.form['affected_id']
@@ -107,16 +105,15 @@ def select_affected():
     return render_template('select_affected.jinja', affected=affected.all())
 
 
-@bp.route('/requests')
-@login_required
+@bp.route('/organization-charity-campaign/requests')
 @roles_required(['organization', 'authorities'])
-def all_requests():
-    requests = db.session.scalars(db.select(Request)).all()
-    return render_template('all_requests.jinja', requests=requests)
+def requests_for_org_charity_campaign():
+    organization_charity_campaign_id = request.args.get('organization_charity_campaign_id', type=int)
+    requests = Request.query.filter(Request.charity_campaign_id == organization_charity_campaign_id).all()
+    return render_template('view_requests.jinja', requests=requests)
 
 
 @bp.route('/request/create', methods=['GET', 'POST'])
-@login_required
 @roles_required(['affected'])
 def create_request():
     affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
@@ -169,7 +166,7 @@ def create_request():
 
 
 @bp.route('/request/edit/<int:request_id>', methods=['GET', 'POST'])
-@login_required
+@roles_required('affected')
 def edit_request(request_id):
     request_obj = db.get_or_404(Request, request_id)
 
@@ -197,16 +194,15 @@ def edit_request(request_id):
     return render_template('edit_request_wtf.jinja', form=form, request=request_obj)
 
 
-@bp.route('/request/update_status/<int:request_id>', methods=['GET', 'POST'])
-@login_required
-@roles_required(['organization', 'authorities'])
+@bp.route('/request/update-status/<int:request_id>', methods=['GET', 'POST'])
+@roles_required('organization')
 def update_request_status(request_id):
     request_obj = db.get_or_404(Request, request_id)
+    form = UpdateRequestStatusForm(obj=request_obj)
+    form.status.choices = [(status.name, _(status.value)) for status in RequestStatus]
 
-    if request.method == 'POST':
-        new_status = request.form.get('status')
-        if new_status not in RequestStatus.__members__:
-            return redirect(url_for('affected.update_request_status', request_id=request_id))
+    if form.validate_on_submit():
+        new_status = form.status.data
 
         request_obj.status = RequestStatus[new_status]
         db.session.commit()
@@ -216,11 +212,11 @@ def update_request_status(request_id):
 
         return redirect(url_for('affected.affected_details', affected_id=request_obj.affected_id))
 
-    return render_template('update_request_status.jinja', request=request_obj, statuses=RequestStatus)
+    return render_template('update_request_status.jinja', form=form, request=request_obj, statuses=RequestStatus)
 
 
 @bp.route('/request/delete/<int:request_id>', methods=['POST', 'GET'])
-@login_required
+@roles_required(['organization', 'affected'])
 def delete_request(request_id):
     request_obj = db.get_or_404(Request, request_id)
 
@@ -230,28 +226,12 @@ def delete_request(request_id):
     db.session.delete(request_obj.address)
     db.session.delete(request_obj)
     db.session.commit()
-
-    return redirect(url_for('affected.my_details'))
-
-
-@bp.route('/select_campaign', methods=['GET', 'POST'])
-@login_required
-@roles_required(['affected'])
-def select_campaign():
-    affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
-    if not affected:
-        flash('No data found for the current user.')
-        return redirect(url_for('affected.index'))
-
-    if request.method == 'POST':
-        campaign_id = request.form.get('campaign_id')
-        affected.campaign_id = campaign_id
-        db.session.commit()
-        flash('Campaign selected successfully.')
+    if current_user.type == 'affected':
         return redirect(url_for('affected.my_details'))
+    else:
+        return redirect(url_for('home'))
 
-    campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
-    return render_template('select_campaign.jinja', affected=affected, campaigns=campaigns)
+# SAMPLES
 
 
 @bp.route('/samples', methods=['POST'])

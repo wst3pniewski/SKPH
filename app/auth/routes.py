@@ -229,7 +229,7 @@ def setup_totp():
         return render_template('setup_totp.jinja', qr_code=img_str, form=form)
 
 
-@bp.route('/remove_totp', methods=['GET', 'POST'])
+@bp.route('/remove-totp', methods=['GET', 'POST'])
 @login_required
 def remove_totp():
     form = RemoveTOTPForm()
@@ -274,7 +274,7 @@ def verify_totp(user_id):
     return render_template('verify_totp.jinja', form=form)
 
 
-@bp.route('/reset_password', methods=['GET', 'POST'])
+@bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password_request():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -291,7 +291,7 @@ def reset_password_request():
     return render_template('reset_password_request.jinja', form=form)
 
 
-@bp.route('/reset_password/<token>/<user_id>', methods=['GET', 'POST'])
+@bp.route('/reset-password/<token>/<user_id>', methods=['GET', 'POST'])
 def reset_password(token, user_id):
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -316,7 +316,7 @@ def register_choice():
     return render_template('register_choice.jinja')
 
 
-@bp.route('/manage_users', methods=['GET', 'POST'])
+@bp.route('/manage-users', methods=['GET', 'POST'])
 @roles_required('admin')
 @csrf.exempt
 def manage_users():
@@ -374,7 +374,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
 
-@bp.route('/setup_profile_picture', methods=['POST'])
+@bp.route('/setup-profile-picture', methods=['POST'])
 @login_required
 @csrf.exempt
 def setup_profile_picture():
@@ -409,7 +409,7 @@ def setup_profile_picture():
     return redirect(url_for('auth.profile'))
 
 
-@bp.route('/delete_profile_picture', methods=['POST'])
+@bp.route('/delete-profile-picture', methods=['POST'])
 @login_required
 @csrf.exempt
 def delete_profile_picture():
@@ -425,7 +425,7 @@ def delete_profile_picture():
     return redirect(url_for('auth.profile'))
 
 
-@bp.route('/set_theme', methods=['POST'])
+@bp.route('/set-theme', methods=['POST'])
 def set_theme():
     data = request.get_json()
     theme = data.get('theme')

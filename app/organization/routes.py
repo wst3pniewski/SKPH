@@ -39,14 +39,14 @@ def list_charity_campaigns():
                            pagination=pagination)
 
 
-@bp.route('/organizations_charity_campaigns')
+@bp.route('/organizations-charity-campaigns')
 def list_organization_charity_campaigns():
     organization_charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
     return render_template('list_organization_charity_campaigns.jinja',
                            organization_charity_campaigns=organization_charity_campaigns)
 
 
-@bp.route('charity_campaigns/<int:charity_campaign_id>')
+@bp.route('charity-campaigns/<int:charity_campaign_id>')
 def list_signed_organizations(charity_campaign_id):
     organization_charity_campaigns = (
         db.session.scalars(db.select(OrganizationCharityCampaign)
@@ -55,7 +55,7 @@ def list_signed_organizations(charity_campaign_id):
                            organization_charity_campaigns=organization_charity_campaigns)
 
 
-@bp.route('charity_campaign/<int:charity_campaign_id>')
+@bp.route('charity-campaign/<int:charity_campaign_id>')
 def view_campaign(charity_campaign_id):
     campaign = db.session.get(CharityCampaign, charity_campaign_id)
     referrer = request.referrer
@@ -64,7 +64,7 @@ def view_campaign(charity_campaign_id):
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/volunteers')
+@bp.route('/charity-campaign/<int:charity_campaign_id>/volunteers')
 @roles_required(['organization', 'authorities'])
 def manage_volunteers(charity_campaign_id):
     campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -79,7 +79,7 @@ def manage_volunteers(charity_campaign_id):
                            referrer=referrer)
 
 
-@bp.route('/authorities/charity_campaign/<int:charity_campaign_id>/volunteers')
+@bp.route('/authorities/charity-campaign/<int:charity_campaign_id>/volunteers')
 @roles_required(['authorities'])
 def list_volunteers(charity_campaign_id):
     campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -92,7 +92,7 @@ def list_volunteers(charity_campaign_id):
 # =================== AUTHORITIES ===================
 
 
-@bp.route('authorities/profile')
+@bp.route('/authorities/profile')
 @roles_required(['authorities'])
 def authorities_profile():
     authorities = db.session.get(Authorities, current_user.authorities.id)
@@ -109,7 +109,7 @@ def view_authorities(authorities_id):
                            referrer=referrer)
 
 
-@bp.route('authorities/<int:authorities_id>/charity_campaigns')
+@bp.route('/authorities/<int:authorities_id>/charity-campaigns')
 @roles_required(['authorities'])
 def list_authorities_charity_campaigns(authorities_id):
     if current_user.type == 'authorities':
@@ -121,7 +121,7 @@ def list_authorities_charity_campaigns(authorities_id):
                            charity_campaigns=charity_campaigns)
 
 
-@bp.route('charity_campaign/manage/<int:charity_campaign_id>', methods=['GET', 'POST'])
+@bp.route('charity-campaign/manage/<int:charity_campaign_id>', methods=['GET', 'POST'])
 @roles_required(['authorities'])
 def manage_charity_campaign(charity_campaign_id):
     charity_campaign = db.session.get(CharityCampaign, charity_campaign_id)
@@ -137,7 +137,7 @@ def manage_charity_campaign(charity_campaign_id):
         return abort(403)
 
 
-@bp.route('/create_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/create-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['authorities'])
 def create_charity_campaign():
     form = CharityCampaignForm()
@@ -154,7 +154,7 @@ def create_charity_campaign():
 # =================== ORGANIZATIONS ===================
 
 
-@bp.route('organization/profile')
+@bp.route('/organization/profile')
 @roles_required(['organization'])
 def organization_profile():
     organization = db.session.get(Organization, current_user.organization.id)
@@ -162,7 +162,7 @@ def organization_profile():
                            organization=organization)
 
 
-@bp.route('organization/<int:organization_id>/profile')
+@bp.route('/organization/<int:organization_id>/profile')
 @roles_required(['organization'])
 def selected_organization_profile(organization_id):
     organization = db.session.get(Organization, organization_id)
@@ -180,14 +180,14 @@ def list_organizations():
                            pagination=pagination)
 
 
-@bp.route('organization/<int:organization_id>')
+@bp.route('/organization/<int:organization_id>')
 def view_organization(organization_id):
     o1 = db.session.get(Organization, organization_id)
     return render_template('view_organization.jinja',
                            organization=o1)
 
 
-@bp.route('/organization_charity_campaigns')
+@bp.route('/organization-charity-campaigns')
 def list_my_charity_campaigns():
     organization_charity_campaigns = (
         db.session.scalars(db.select(OrganizationCharityCampaign)
@@ -196,7 +196,7 @@ def list_my_charity_campaigns():
                            organization_charity_campaigns=organization_charity_campaigns)
 
 
-@bp.route('/sign_to_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/sign-to-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def sign_to_charity_campaign():
     form = SignToCharityCampaignForm()
@@ -221,7 +221,7 @@ def sign_to_charity_campaign():
     return render_template('sign_to_charity_campaign.jinja', form=form)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/tasks/create', methods=['GET', 'POST'])
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/tasks/create', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def create_task(organization_charity_campaign_id):
     organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
@@ -251,7 +251,7 @@ def create_task(organization_charity_campaign_id):
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/tasks/create',
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/tasks/create',
           methods=['GET', 'POST'])
 @roles_required(['organization'])
 def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_id):
@@ -279,7 +279,7 @@ def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_i
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/tasks/evaluate/<int:task_id>', methods=['GET', 'POST'])
+@bp.route('/charity-campaign/<int:charity_campaign_id>/tasks/evaluate/<int:task_id>', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def eval_task(charity_campaign_id, task_id):
     charity_campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -327,7 +327,7 @@ def eval_task(charity_campaign_id, task_id):
                            form=form)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/volunteer/<int:volunteer_id>/tasks')
+@bp.route('/charity-campaign/<int:charity_campaign_id>/volunteer/<int:volunteer_id>/tasks')
 @roles_required(['organization', 'authorities'])
 def view_volunteer_tasks(charity_campaign_id, volunteer_id):
     charity_campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -351,7 +351,7 @@ def view_volunteer_tasks(charity_campaign_id, volunteer_id):
                            status_translations=status_translations)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/remove',
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/remove',
           methods=['POST'])
 @roles_required(['organization'])
 def remove_volunteer(organization_charity_campaign_id, volunteer_id):
@@ -373,7 +373,7 @@ def remove_volunteer(organization_charity_campaign_id, volunteer_id):
 # =================== VOLUNTEERS ===================
 
 
-@bp.route('/volunteer_sign_to_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/volunteer-sign-to-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['volunteer'])
 def volunteer_sign_to_charity_campaign():
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))
@@ -406,7 +406,7 @@ def volunteer_sign_to_charity_campaign():
         return abort(404)
 
 
-@bp.route('/volunteer/charity_campaigns', methods=['GET'])
+@bp.route('/volunteer/charity-campaigns', methods=['GET'])
 @roles_required(['volunteer'])
 def list_volunteer_charity_campaigns():
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))
@@ -420,7 +420,7 @@ def list_volunteer_charity_campaigns():
 # =================== SAMPLES ===================
 
 
-@bp.route('/add_sample_organization_charity_campaign')
+@bp.route('/add-sample-organization-charity-campaign')
 def add_sample_organization_charity_campaign():
     address1 = Address(street='Miejska', street_number='1a', city='Łódź', voivodeship='Łódzkie')
     authority1 = Authorities(name='Aleksander Wika', phone='758934576', approved=True, address=address1)
