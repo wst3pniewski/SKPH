@@ -4,11 +4,6 @@
 
 {% block content %}
 <div class="container mt-2">
-    <br>
-    <div>
-        <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Back") }}</a>
-    </div>
-    <hr class="my-4" />
     <h3>{{ _("Tasks for") }} {{ volunteer.first_name }} {{ volunteer.last_name }}</h3>
     {% if current_user.type == 'organization' %}
     <div class="d-flex justify-content-end">

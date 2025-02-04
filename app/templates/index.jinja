@@ -12,174 +12,186 @@
       enabling effective coordination of emergency aid.""") }}
     </p>
   </div>
+</div>
+<div class="p-5">
   <!-- ADMIN -->
   {% if current_user.type == 'admin' %}
-  <hr class="my-4">
   <h3>{{ _("Modules") }}</h3>
-  <div class="d-flex flex-column">
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('volunteers.index') }}">{{ _("Volunteers Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.index') }}">{{ _("Organizations Module")
-      }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('affected.index') }}">{{ _("Affected Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('donors.index') }}">{{ _("Donors Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('reports.ui') }}">{{ _("Reports Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.index') }}">{{ _("Maps Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('chat.chat') }}">{{ _("Chat Module") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('supply_chain.demo') }}">{{ _("Tracking and managing
-      resources
-      module") }}</a>
+  <div class="d-flex flex-column gap-3">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('volunteers.index') }}">
+      {{ _("Volunteers Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('organization.index') }}">
+      {{ _("Organizations Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('affected.index') }}">
+      {{ _("Affected Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('donors.index') }}">
+      {{ _("Donors Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('reports.ui') }}">
+      {{ _("Reports Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('maps.index') }}">
+      {{ _("Maps Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('chat.chat') }}">
+      {{ _("Chat Module") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('supply_chain.index') }}">
+      {{ _("Tracking and managing resources module") }}
+    </a>
   </div>
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Admin") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('auth.manage_users') }}">{{
-      _("Admin Dashboard") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.add_page') }}">{{ _("Maps Module") }}</a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('auth.manage_users') }}">
+      {{ _("Admin Dashboard") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('maps.add_page') }}">
+      {{ _("Maps Module") }}
+    </a>
   </div>
   {% endif %}
   <!-- AUTHORITIES -->
   {% if current_user.type == 'authorities' %}
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Authorities") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3"
-      href="{{ url_for('organization.list_authorities_charity_campaigns', authorities_id=current_user.authorities.id) }}">{{
-      _("Track current campaigns") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.create_charity_campaign') }}">{{
-      _("Create a charity campaign") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('supply_chain.view_all') }}">{{
-      _("Track supplies") }}</a>
+    <a class="btn btn-primary btn-lg"
+      href="{{ url_for('organization.list_authorities_charity_campaigns', authorities_id=current_user.authorities.id) }}">
+      {{ _("Track current campaigns") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('organization.create_charity_campaign') }}">{{
+      _("Create a charity campaign") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('supply_chain.view_all') }}">
+      {{ _("Track supplies") }}
+    </a>
   </div>
   {% endif %}
   <!-- AFFECTED -->
   {% if current_user.type == 'affected' %}
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Affected") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3"
-      href="{{ url_for('affected.create_request', affected_id=current_user.affected.id) }}">{{
-      _("Create request") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-"
-      href="{{ url_for('affected.my_details', affected_id=current_user.affected.id) }}">{{
-      _("Manage requests") }}</a>
+    <a class="btn btn-primary btn-lg"
+      href="{{ url_for('affected.create_request', affected_id=current_user.affected.id) }}">
+      {{ _("Create request") }}
+    </a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('affected.my_details', affected_id=current_user.affected.id) }}">
+      {{ _("Manage requests") }}
+    </a>
   </div>
   {% endif %}
   <!-- VOLUNTEERS -->
   {% if current_user.type == 'volunteer' %}
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Volunteer") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.volunteer_sign_to_charity_campaign') }}">{{
-      _("Volunteer your help") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.list_volunteer_charity_campaigns') }}">{{
-      _("List my campaigns") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('volunteers.list_my_tasks') }}">{{
-      _("Manage my tasks") }}</a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('organization.volunteer_sign_to_charity_campaign') }}">
+      {{ _("Volunteer your help") }}</a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('organization.list_volunteer_charity_campaigns') }}">
+      {{ _("List my campaigns") }}</a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('volunteers.list_my_tasks') }}">
+      {{ _("Manage my tasks") }}</a>
   </div>
   {% endif %}
   <!-- DONORS -->
   {% if current_user.type == 'donor' %}
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Donor") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('donors.create_donation') }}">{{
-      _("Create a donation") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3"
-      href="{{ url_for('donors.list_donations', donor_id=current_user.donor.donor_id) }}">{{
-      _("View your donations") }}</a>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('donors.create_donation') }}">
+      {{ _("Create a donation") }}
+    </a>
+    <a class="btn btn-primary btn-lg"
+      href="{{ url_for('donors.list_donations', donor_id=current_user.donor.donor_id) }}">
+      {{ _("View your donations") }}
+    </a>
   </div>
   {% endif %}
-
   <!-- ORGANIZATION -->
   {% if current_user.type == 'organization' %}
-  <div class="d-flex flex-column">
-    <hr>
+  <div class="d-flex flex-column gap-3">
     <h3>{{ _("Organization") }}</h3>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.sign_to_charity_campaign') }}">{{
-      _("Sign to a charity campaign") }}
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.sign_to_charity_campaign') }}">
+      {{ _("Sign to a charity campaign") }}
     </a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.list_my_charity_campaigns') }}">{{
-      _("Manage charity campaigns") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('supply_chain.index') }}">{{
-      _("Manage resources") }}</a>
-    <br>
-    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.add_page') }}">{{ _("Maps Module") }}</a>
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('organization.list_my_charity_campaigns') }}">
+      {{ _("Manage charity campaigns") }}
+    </a>
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('supply_chain.index') }}">
+      {{ _("Manage resources") }}
+    </a>
+    <a class="btn btn-primary btn-lg mb-3" href="{{ url_for('maps.add_page') }}">
+      {{ _("Maps Module") }}
+    </a>
   </div>
   {% endif %}
 </div>
 {% if current_user.is_authenticated == False %}
 <div class="text-center">
-  <!-- Stakeholder Cards -->
   <section class="py-5">
     <div class="container">
       <div class="row g-4">
-        <!-- Affected People -->
         <div class="col-md-6">
           <div class="card h-100">
             <div class="card-body text-center">
-              <div class="display-4 text-danger mb-3">🆘</div>
-              <h3 class="card-title h4">Need Help?</h3>
-              <p class="card-text text-muted mb-3">Register your needs and get immediate support from our network</p>
-              <a href="{{ url_for('auth.register', user_type='affected') }}" class="btn btn-primary">Get Help →</a>
+              <div class="display-4 text-danger mb-3">
+                <i class="fas fa-suitcase-medical"></i>
+              </div>
+              <h3 class="card-title h4">
+                {{ _("Need Help") }}?
+              </h3>
+              <p class="card-text text-muted mb-3">
+                {{ _("Register your needs and get immediate support from our network") }}
+              </p>
+              <a href="{{ url_for('auth.register', user_type='affected') }}" class="btn btn-primary">
+                {{ _("Get Help") }} →
+              </a>
             </div>
           </div>
         </div>
-        <!-- Volunteers -->
         <div class="col-md-6">
           <div class="card h-100">
             <div class="card-body text-center">
-              <div class="display-4 text-success mb-3">🦸</div>
-              <h3 class="card-title h4">Volunteer</h3>
-              <p class="card-text text-muted mb-3">Join our volunteer network and help those in need</p>
-              <a href="{{ url_for('auth.register', user_type='volunteer') }}" class="btn btn-primary">Register as
-                Volunteer
-                →</a>
+              <div class="display-4 text-success mb-3">
+                <i class="fas fa-handshake-angle"></i>
+              </div>
+              <h3 class="card-title h4">{{ _("Volunteer") }}</h3>
+              <p class="card-text text-muted mb-3">
+                {{ _("Join our volunteer network and help those in need") }}
+              </p>
+              <a href="{{ url_for('auth.register', user_type='volunteer') }}" class="btn btn-primary">
+                {{ _("Register as Volunteer") }} →
+              </a>
             </div>
           </div>
         </div>
       </div>
       <div class="row g-4 mt-3">
-        <!-- Donors -->
         <div class="col-md-6">
           <div class="card h-100">
             <div class="card-body text-center">
-              <div class="display-4 text-primary mb-3">💝</div>
-              <h3 class="card-title h4">Donate</h3>
-              <p class="card-text text-muted mb-3">Support our efforts with monetary or material donations</p>
-              <a href="{{ url_for('auth.register', user_type='donor') }}" class="btn btn-primary">Make a Donation
-                →</a>
+              <div class="display-4 text-primary mb-3">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+              <h3 class="card-title h4">{{ _("Donate") }}</h3>
+              <p class="card-text text-muted mb-3">
+                {{ _("Support our efforts with monetary or material donations") }}
+              </p>
+              <a href="{{ url_for('auth.register', user_type='donor') }}" class="btn btn-primary">
+                {{ _("Make a Donation") }} →
+              </a>
             </div>
           </div>
         </div>
-        <!-- Authorities -->
         <div class="col-md-6">
           <div class="card h-100">
             <div class="card-body text-center">
-              <div class="display-4 text-purple mb-3">👮</div>
+              <div class="display-4 text-purple mb-3">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
               <h3 class="card-title h4">{{ _("Authorities") }}</h3>
-              <p class="card-text text-muted mb-3">{{ _("Official portal for emergency responders and authorities") }}
+              <p class="card-text text-muted mb-3">
+                {{ _("Official portal for emergency responders and authorities") }}
               </p>
               <a href="{{ url_for('auth.register', user_type='authorities') }}" class="btn btn-primary">
                 {{ _("Authority Login") }} →
@@ -192,7 +204,6 @@
   </section>
 </div>
 {% endif %}
-<!-- Live Updates -->
 <section class="bg-body-secondary py-5">
   <div class="container">
     <h2 class="text-center mb-4">Live Emergency Updates</h2>

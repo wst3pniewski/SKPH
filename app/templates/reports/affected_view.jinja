@@ -9,13 +9,11 @@
         <a href="{{ url_for('reports.affected_csv') }}" class="btn btn-success">Eksportuj CSV</a>
         <a href="{{ url_for('reports.ui') }}" class="btn btn-secondary">Powrót do Reports UI</a>
     </div>
-
     <table class="table table-bordered">
         <thead class="thead-light">
             <tr>
-                <th>{{ _("ID") }}</th>
-                <th>{{ _("Imię") }}</th>
-                <th>{{ _("Nazwisko") }}</th>
+                <th>{{ _("First Name") }}</th>
+                <th>{{ _("Last Name") }}</th>
                 <th>{{ _("Needs") }}</th>
                 <th>{{ _("Address (City)") }}</th>
                 <th>{{ _("Address (Voivodeship)") }}</th>
@@ -24,7 +22,6 @@
         <tbody>
             {% for aff in affected_list %}
             <tr>
-                <td>{{ aff.id }}</td>
                 <td>{{ aff.first_name }}</td>
                 <td>{{ aff.last_name }}</td>
                 <td>{{ aff.needs }}</td>

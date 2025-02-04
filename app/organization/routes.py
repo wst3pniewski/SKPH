@@ -29,9 +29,12 @@ def index():
 
 @bp.route('/charity_campaigns')
 def list_charity_campaigns():
-    charity_campaigns = db.session.scalars(db.select(CharityCampaign)).all()
+    page = request.args.get('page', 1, type=int)  # Get the page number from the query params (default to 1)
+    per_page = 10
+    pagination = db.paginate(db.select(CharityCampaign), page=page, per_page=per_page, error_out=False)
     return render_template('list_all_charity_campaigns.jinja',
-                           charity_campaigns=charity_campaigns)
+                           charity_campaigns=pagination.items,
+                           pagination=pagination)
 
 
 @bp.route('/organizations_charity_campaigns')
@@ -98,8 +101,10 @@ def authorities_profile():
 @bp.route('/authorities/<int:authorities_id>')
 def view_authorities(authorities_id):
     authority = db.session.get(Authorities, authorities_id)
+    referrer = request.referrer
     return render_template('view_authority.jinja',
-                           authority=authority)
+                           authority=authority,
+                           referrer=referrer)
 
 
 @bp.route('authorities/<int:authorities_id>/charity_campaigns')
@@ -173,9 +178,12 @@ def selected_organization_profile(organization_id):
 
 @bp.route('/organizations')
 def list_organizations():
-    organizations = db.session.scalars(db.select(Organization)).all()
+    page = request.args.get('page', 1, type=int)  # Get the page number from the query params (default to 1)
+    per_page = 10
+    pagination = db.paginate(db.select(Organization), page=page, per_page=per_page, error_out=False)
     return render_template('list_organizations.jinja',
-                           organizations=organizations)
+                           organizations=pagination.items,
+                           pagination=pagination)
 
 
 @bp.route('organization/<int:organization_id>')

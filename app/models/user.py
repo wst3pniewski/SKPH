@@ -1,4 +1,3 @@
-from enum import unique
 from dns.tsig import BadSignature
 from flask import current_app
 from flask_login import UserMixin
