@@ -77,7 +77,7 @@ def index():
             .join(DonationType, ItemStock.item_type_id == DonationType.id) \
             .filter(DonationType.type == 'Money',
                     ItemStock.organization_charity_campaign == curr_organization_charity_campaign).first()
-
+        print(org_char_camp.donations_money)
         return render_template('supply_chain.jinja',
                                organization=selected_organization,
                                organization_charity_campaign=org_char_camp,

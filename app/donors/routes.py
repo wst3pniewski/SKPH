@@ -1,3 +1,4 @@
+from flask_babel import gettext as _
 from datetime import date
 
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
@@ -14,6 +15,7 @@ from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
 from app.models.organization import Organization
+from app.forms.donations_wtf import CreateDonationForm
 
 bp = Blueprint('donors', __name__,
                template_folder='../templates/donors',
@@ -43,36 +45,40 @@ def fetch_donors():
 
 @bp.route('/donation/create', methods=['GET', 'POST'])
 @roles_required(['donor'])
-@csrf.exempt
 def create_donation():
-    donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
-    charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
-    donation_type = db.session.scalars(db.select(DonationType)).all()
-    if request.method == 'POST':
-        description = request.form['description']
-        type_d = request.form['donation_type']
-        charity_campaign = request.form['organization_charity_campaign_id']
-        amount = request.form['amount']
-        if type_d == 'Money':
-            money_type = DonationType.query.filter(DonationType.type == 'Money').first()
+    form = CreateDonationForm()
+    form.donation_type.choices = [(item.id, _(item.type)) for item in db.session.scalars(db.select(DonationType)).all()]
+    form.organization_charity_campaign_id.choices = [(campaign.id, f"{campaign.charity_campaign.name} ({campaign.organization.organization_name})") for campaign in db.session.scalars(db.select(OrganizationCharityCampaign)).all()]
 
+    if form.validate_on_submit():
+        description = form.description.data
+        donation_type = form.donation_type.data
+        charity_campaign_id = form.organization_charity_campaign_id.data
+        amount = form.amount.data
+
+        donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
+        charity_campaign = OrganizationCharityCampaign.query.get(charity_campaign_id)
+        money_type = DonationType.query.filter(DonationType.type == 'Money').scalar()
+
+        if donation_type == money_type.id:
             new_donation_money = DonationMoney(
                 description=description,
                 donation_date=date.today(),
                 donation_type=money_type,
                 cashAmount=amount,
                 donor=donor,
-                charity_campaign_id=charity_campaign
+                charity_campaign_id=charity_campaign_id
             )
+            charity_campaign.donations_money.append(new_donation_money)
             db.session.add(new_donation_money)
 
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
-                .filter(ItemStock.organization_charity_campaign_id == charity_campaign, DonationType.type == 'Money') \
+                .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id, DonationType.type == 'Money') \
                 .first()
 
             if curr_stock is None:
                 new_stock = ItemStock(item_type=money_type,
-                                      organization_charity_campaign_id=charity_campaign,
+                                      organization_charity_campaign_id=charity_campaign_id,
                                       amount=amount)
                 db.session.add(new_stock)
             else:
@@ -85,22 +91,21 @@ def create_donation():
             new_donation_item = DonationItem(
                 description=description,
                 donation_date=date.today(),
-                donation_type_id=type_d,
+                donation_type_id=donation_type,
                 amount=amount,
                 donor_id=donor.donor_id,
-                charity_campaign_id=charity_campaign
+                charity_campaign_id=charity_campaign_id
             )
             db.session.add(new_donation_item)
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
-                .filter(ItemStock.organization_charity_campaign_id == charity_campaign,
-                        DonationType.id == type_d) \
+                .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id,
+                        DonationType.id == donation_type) \
                 .first()
             if curr_stock is None:
-                new_stock = ItemStock(item_type_id=type_d,
-                                      organization_charity_campaign_id=charity_campaign,
+                new_stock = ItemStock(item_type_id=donation_type,
+                                      organization_charity_campaign_id=charity_campaign_id,
                                       amount=amount)
                 db.session.add(new_stock)
-
             else:
                 curr_stock.amount += float(amount)
                 db.session.add(curr_stock)
@@ -109,15 +114,13 @@ def create_donation():
             flash('Donation created successfully')
 
         return redirect(url_for('home', donor_id=donor.donor_id))
-    return render_template('create_donation.jinja',
-                           charity_campaigns=charity_campaigns,
-                           ItemDonationType=donation_type)
+    return render_template('create_donation.jinja', form=form)
 
 
 @bp.route('/donations')
 @roles_required(['donor', 'organization', 'authorities'])
 def list_donations():
-    donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
+    donor = Donor.query.filter(Donor.user_id == current_user.id).first()
     if current_user.type == 'donor':
         if current_user.donor.donor_id != donor.donor_id:
             return abort(403)

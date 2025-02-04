@@ -7,41 +7,29 @@
   <div class="row justify-content-center">
     <div class="col-md-6">
       <h1>{{ _("Create a Donation") }}</h1>
-      <form action="{{ url_for('donors.create_donation') }}" method="post">
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
         <fieldset>
           <div class="form-group">
-            <label for="exampleTextarea">{{ _("Donation Description:") }}</label>
-            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
           </div>
           <div class="form-group" id="amount_container">
-            <label for="amount">{{ _("Donation Amount:") }}</label>
-            <input type="number" class="form-control" id="amount" name="amount" placeholder="{{ _('Amount') }}"
-              step="0.5">
+            {{ form.amount.label(class="form-label") }}
+            {{ form.amount(class="form-control") }}
           </div>
-          <div>
-            <label for="donation_type">{{ _("Type:") }}</label>
-            <select class="form-control" id="donation_type" name="donation_type" required
-              onchange="toggleDonationFields()">
-              <option value="money">{{ _("Money") }}</option>
-              {% for item in ItemDonationType %}
-              <option value="{{ item.id }}">{{ item.type }}</option>
-              {% endfor %}
-            </select>
+          <div class="form-group">
+            {{ form.donation_type.label(class="form-label") }}
+            {{ form.donation_type(class="form-control", onchange="toggleDonationFields()") }}
           </div>
-            <br>
-          <div>
-          <label for="organization_charity_campaign_id">{{ _("Charity Campaign:") }}</label>
-          <select class="form-control" id="organization_charity_campaign_id" name="organization_charity_campaign_id"
-            required>
-            {% for campaign in charity_campaigns %}
-            <option value="{{ campaign.id }}">{{ campaign.charity_campaign.name }} ({{
-              campaign.organization.organization_name }})</option>
-            {% endfor %}
-          </select>
+          <br>
+          <div class="form-group">
+            {{ form.organization_charity_campaign_id.label(class="form-label") }}
+            {{ form.organization_charity_campaign_id(class="form-control") }}
           </div>
-         <br>
+          <br>
           <div>
-            <button type="submit" class="btn btn-primary">{{ _("Confirm Donation") }}</button>
+            {{ form.submit(class="btn btn-primary") }}
             <a href="{{ url_for('home') }}" class="btn btn-danger">{{ _("Cancel") }}</a>
           </div>
         </fieldset>
@@ -53,18 +41,12 @@
 <script>
   function toggleDonationFields() {
     var donationType = document.getElementById('donation_type').value;
-    var itemDonationTypeContainer = document.getElementById('item_donation_type_container');
     var amountContainer = document.getElementById('amount_container');
-    var countContainer = document.getElementById('count_container');
 
     if (donationType === 'item') {
-      itemDonationTypeContainer.style.display = 'block';
       amountContainer.style.display = 'none';
-      countContainer.style.display = 'block';
     } else {
-      itemDonationTypeContainer.style.display = 'none';
       amountContainer.style.display = 'block';
-      countContainer.style.display = 'none';
     }
   }
 
