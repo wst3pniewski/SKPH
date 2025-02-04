@@ -40,7 +40,20 @@
                 </td>
                 <td>
                     {% if task.evaluation_ %}
-                    Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Score") }}</th>
+                                <th>{{ _("Description") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ task.evaluation_.score }}</td>
+                                <td>{{ task.evaluation_.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     {% else %}
                     <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
@@ -83,7 +96,20 @@
                 </td>
                 <td>
                     {% if task.evaluation_ %}
-                    Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Score") }}</th>
+                                <th>{{ _("Description") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ task.evaluation_.score }}</td>
+                                <td>{{ task.evaluation_.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     {% else %}
                     <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
