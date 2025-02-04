@@ -1,20 +1,16 @@
 {% extends "base.jinja" %}
 
 {% block title %}{{ _("Volunteer Sign to Charity Campaign") }}{% endblock %}
-
+{% set referrer = url_for('home') %}
 {% block content %}
 <div class="container mt-2">
-    <div>
-        <a href="{{ url_for('home') }}" class="btn btn-secondary">{{ _("Back") }}</a>
-    </div>
-    <hr class="my-4" />
     <div class="row justify-content-center">
         <div class="col-md-6">
             {% if organization_charity_campaigns %}
             <h1>{{ _("Sign to Charity Campaign") }}</h1>
             <form method="post">
                 {{ form.hidden_tag() }}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     {{ form.organization_charity_campaign_id.label(class="form-label") }}
                     {{ form.organization_charity_campaign_id(class="form-control") }}
                 </div>

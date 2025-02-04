@@ -1,4 +1,4 @@
-from flask_babel import _
+from flask_babel import lazy_gettext as _l
 from flask_wtf import FlaskForm
 from wtforms import (FormField, IntegerField, SelectField, StringField,
                      SubmitField)
@@ -8,14 +8,14 @@ from .address_wtf import AddressForm
 
 
 class CreateRequestForm(FlaskForm):
-    name = StringField(_('Request Name'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Request Name")})
-    needs = SelectField(_('Needs'), validators=[DataRequired()], coerce=int, render_kw={"class": "form-control"})
-    amount = IntegerField(_('Amount'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Amount")})
+    name = StringField(_l('Request Name'), validators=[DataRequired()])
+    needs = SelectField(_l('Needs'), validators=[DataRequired()], coerce=int)
+    amount = IntegerField(_l('Amount'), validators=[DataRequired()])
     address = FormField(AddressForm)
-    charity_campaign_id = SelectField(_('Charity Campaign'), coerce=int, render_kw={"class": "form-control"})
-    submit = SubmitField(_('Create Request'), render_kw={"class": "btn btn-primary mt-3"})
+    charity_campaign_id = SelectField(_l('Charity Campaign'), coerce=int)
+    submit = SubmitField(_l('Create Request'))
 
 
 class UpdateRequestStatusForm(FlaskForm):
-    status = SelectField(_('Status'), validators=[DataRequired()])
-    submit = SubmitField(_('Update'))
+    status = SelectField(_l('Status'), validators=[DataRequired()])
+    submit = SubmitField(_l('Update'))

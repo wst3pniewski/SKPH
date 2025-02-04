@@ -1,11 +1,11 @@
-from flask_babel import _
+from flask_babel import lazy_gettext as _l
 from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 
 
 class AddressForm(FlaskForm):
-    street = StringField(_('Street'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Street")})
-    street_number = StringField(_('Street Number'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Street Number")})
-    city = StringField(_('City'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("City")})
-    voivodeship = StringField(_('Voivodeship'), validators=[DataRequired()], render_kw={"class": "form-control", "placeholder": _("Voivodeship")})
+    street = StringField(_l('Street'), validators=[DataRequired()])
+    street_number = StringField(_l('Street Number'), validators=[DataRequired()])
+    city = StringField(_l('City'), validators=[DataRequired()])
+    voivodeship = StringField(_l('Voivodeship'), validators=[DataRequired()])
