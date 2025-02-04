@@ -1497,7 +1497,7 @@ msgstr "Zobacz Listę Wolontariuszy"
 
 #: app/templates/organization/list_organizations.jinja:22
 msgid "View Organization"
-msgstr "Sczegóły Organizacji"
+msgstr "Szczegóły Organizacji"
 
 #: app/templates/organization/list_volunteer_charity_campaigns.jinja:3
 #: app/templates/organization/list_volunteer_charity_campaigns.jinja:7
