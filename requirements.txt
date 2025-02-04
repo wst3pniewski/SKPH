@@ -27,6 +27,10 @@ matplotlib==3.10.0
 
 # Real time chat
 flask-socketio == 5.5.1
+
 # Maps
 openrouteservice == 2.3.0
 geopy == 2.4.1
+
+# Monitoring
+

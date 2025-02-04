@@ -1,20 +1,22 @@
 import os
-from flask import Flask, render_template, request, redirect
+
+from flask import Flask, redirect, render_template, request
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.affected.routes import bp as affected_bp, initialize_donation_types
+from app.affected.routes import bp as affected_bp
+from app.affected.routes import initialize_donation_types
 from app.auth.routes import bp as auth_bp
 from app.auth.user_service import init_login_manager
 from app.communication.routes import bp as chat_bp
 from app.communication.socketio_chat import socketio
 from app.donors.routes import bp as donors_bp
-from app.extensions import babel, db, get_locale, mail, csrf
+from app.extensions import babel, csrf, db, get_locale, mail
 from app.maps.routes import bp as maps_bp
 from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
-from app.volunteers.routes import bp as volunteers_bp
 from app.supply_chain.routes import bp as supply_chain_bp
+from app.volunteers.routes import bp as volunteers_bp
 from config import config
 
 
