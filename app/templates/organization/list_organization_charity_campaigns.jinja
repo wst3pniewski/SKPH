@@ -13,6 +13,7 @@
         <th scope="col">{{ _("Organization Name") }}</th>
         <th scope="col">{{ _("Charity Campaign") }}</th>
         <th scope="col">{{ _("Volunteers") }}</th>
+        <th scope="col">{{ _("Need Requests") }}</th>
         <th scope="col">{{ _("Create Task") }}</th>
         <th scope="col">{{ _("View Reports") }}</th>
       </tr>
@@ -31,6 +32,12 @@
           <a class="btn btn-primary btn-sm"
             href="{{ url_for('organization.manage_volunteers', charity_campaign_id=campaign.id) }}">
             {{ _("Manage Volunteers") }}
+          </a>
+        </td>
+        <td>
+          <a href="{{ url_for('affected.requests_for_org_charity_campaign', organization_charity_campaign_id=campaign.id) }}"
+            class="btn btn-primary btn-sm">
+            {{ _("View Requests") }}
           </a>
         </td>
         <td>
@@ -54,6 +61,7 @@
         <th scope="col">{{ _("Organization Name") }}</th>
         <th scope="col">{{ _("Charity Campaign") }}</th>
         <th scope="col">{{ _("Volunteers") }}</th>
+        <th scope="col">{{ _("Need Requests") }}</th>
         <th scope="col">{{ _("View Reports") }}</th>
       </tr>
     </thead>
@@ -71,6 +79,12 @@
           <a class="btn btn-primary btn-sm"
             href="{{ url_for('organization.list_volunteers', charity_campaign_id=campaign.id) }}">
             {{ _("View Volunteers") }}
+          </a>
+        </td>
+        <td>
+          <a href="{{ url_for('affected.requests_for_org_charity_campaign', organization_charity_campaign_id=campaign.id) }}"
+            class="btn btn-primary btn-sm">
+            {{ _("View Requests") }}
           </a>
         </td>
         <td>
