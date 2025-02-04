@@ -34,3 +34,5 @@ geopy == 2.4.1
 
 # Monitoring
 
+# Confirmations
+fpdf2>=2.8.2

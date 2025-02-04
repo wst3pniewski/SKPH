@@ -8,7 +8,7 @@
     <h2>{{ _("Find a user") }}</h2>
     <input type="text" class="form-control" id="search-users" placeholder="{{ _('Search') }}">
     <hr>
-    <ul id="user-list" class="list-group" style="display: none;"></ul>
+    <ul id="user-list" class="list-group mb-3" style="display: none;"></ul>
   </div>
 
   <h2>{{ _("Your existing chats:") }}</h2>
@@ -21,14 +21,12 @@
     </li>
     {% endfor %}
   </ul>
-
-  <br>
-
-  <div id="chat-area" style="display: none;">
+  <div class="my-3" id="chat-area" style="display: none;">
     <h2>{{ _("Chat with ") }}<span id="current-chat-user"></span></h2>
-    <div id="messages" class="mb-3" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    <div id="messages" class="mb-2 rounded"
+      style="height: 300px; overflow-y: auto; overflow-x: hidden; border: 1px solid #ccc; padding: 10px;">
     </div>
-    <div class="input-group">
+    <div class="input-group mb-3">
       <input type="text" id="message-input" class="form-control" placeholder="{{ _('Type a message') }}">
       <button id="send-message" class="btn btn-primary ml-2">{{ _("Send") }}</button>
     </div>
@@ -42,7 +40,8 @@
 <script>
   $(document).ready(function () {
     const socket = io();
-    const email = "{{ user.email if user else '' }}"; // Ensuring user.email exists
+    const email = "{{ user.email if user else '' }}";
+    console.log(email)
 
     function joinRoom(receiver) {
       socket.emit('join', { email: email, receiver: receiver });
@@ -57,7 +56,7 @@
         return;
       }
 
-      $.get('/communication/search_users', { query: query, current_email: email })
+      $.get('/communication/search-users', { query: query, current_email: email })
         .done(function (users) {
           userList.empty();
           if (Array.isArray(users) && users.length > 0) {
@@ -87,20 +86,45 @@
 
       joinRoom(selectedUser);
 
-      $.get('/communication/get_messages', { sender: email, receiver: selectedUser })
+      $.get('/communication/get-messages', { sender: email, receiver: selectedUser })
         .done(function (messages) {
           const messagesDiv = $('#messages');
           messagesDiv.empty();
           messages.forEach(msg => {
-            const profilePicture = msg.sender_profile_picture ? `uploads/${msg.sender_profile_picture}` : 'uploads/base_profile_picture.jpg';
-            messagesDiv.append(
-              `<div class="d-flex align-items-start mb-2">
-                <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-4" width="25" height="25">
-                <div class='ml-2'>
-                  <p><strong>${msg.sender}:</strong> ${msg.content} <small>(${msg.timestamp})</small></p>
+            const profilePicture = msg.sender_profile_picture ? `{{ url_for('static', filename='uploads/') }}${msg.sender_profile_picture}` : `{{ url_for('static', filename='uploads/base_profile_picture.jpg') }}`;
+            const messageClass = msg.sender === email ? 'text-end' : 'text-start';
+            let formattedMessage;
+
+            if (msg.sender === email) {
+              // If the sender is the current user, show the content first
+              formattedMessage = `
+                  <div class="flex-container align-items-start mb-2 ${messageClass}">
+                    <div class="row justify-content-end">
+                      <div class="col-6" style="max-width: 25%;">
+                          <div class='text-bg-secondary rounded p-2' style="word-wrap: break-word;" >
+                            <p class="mb-0"><strong>${msg.content}</strong></p>
+                            <small>(${msg.timestamp})</small>
+                          </div>
+                      </div>
+                    </div>
+                      <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="25" height="25">
+                  </div>`;
+            } else {
+              // If the sender is not the current user, show the sender first
+              formattedMessage = `
+              <div class="flex-container align-items-start mb-2 ${messageClass}"> 
+                <div class='text-bg-primary rounded p-2' style="max-width: 25%;
+                word-wrap: break-word;">
+                  <p class="mb-0">
+                  <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="25" height="25">
+                  ${msg.content}
+                  </p>
+                  <small>(${msg.timestamp})</small>
                 </div>
-              </div>`
-            );
+              </div>`;
+            }
+
+            messagesDiv.append(formattedMessage);
           });
           messagesDiv.scrollTop(messagesDiv[0].scrollHeight);
         })
@@ -135,17 +159,34 @@
 
     socket.on('receive_message', function (data) {
       const currentChatUser = $('#current-chat-user').text();
+      const messageClass = data.sender === email ? 'text-end' : 'text-start';
       if (
         (data.sender === currentChatUser && data.receiver === email) ||
         (data.sender === email && data.receiver === currentChatUser)
       ) {
-        const profilePicture = data.sender_profile_picture ? `uploads/${data.sender_profile_picture}` : 'uploads/base_profile_picture.jpg';
-        const formattedMessage = `<div class="d-flex align-items-start mb-2">
-                                    <img src="{{ url_for('static', filename='') }}${profilePicture}" alt="Profile Picture" class="rounded-circle mr-2" width="30" height="30">
-                                    <div>
-                                      <p><strong>${data.sender}:</strong> ${data.message} <small>(${data.timestamp})</small></p>
-                                    </div>
-                                  </div>`;
+        const profilePicture = data.sender_profile_picture ? `{{ url_for('static', filename='uploads/') }}${data.sender_profile_picture}` : `{{ url_for('static', filename='uploads/base_profile_picture.jpg') }}`;
+        const formattedMessage = data.sender === email ? `
+              <div class="flex-container align-items-start ${messageClass}">
+                <div class="row justify-content-end">
+                  <div class="col-6" style="max-width: 25%;">
+                    <div class='text-bg-secondary rounded p-2' style="word-wrap: break-word;" >
+                        <p class="mb-0"><strong>${data.message}</strong></p>
+                        <small>(${data.timestamp})</small>
+                    </div>
+                  </div>
+                </div>
+                <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="25" height="25">
+              </div>` : `
+              <div class="flex-container align-items-start ${messageClass}">
+                
+                <div class='text-bg-primary rounded p-2' style="max-width: 25%; word-wrap: break-word;">
+                  <p class="mb-0">
+                  <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="25" height="25">
+                  ${data.message}
+                  </p>
+                  <small>(${data.timestamp})</small>
+                </div>
+              </div>`;
         $('#messages').append(formattedMessage);
         $('#messages').scrollTop($('#messages')[0].scrollHeight);
       }

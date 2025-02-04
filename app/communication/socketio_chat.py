@@ -33,7 +33,8 @@ def handle_message(data):
                 'sender': sender_email,
                 'receiver': receiver_email,
                 'message': message_content,
-                'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'sender_profile_picture': sender.profile_picture
             }, room=room)
         else:
             print(f"Sender or receiver not found: {sender_email}, {receiver_email}")

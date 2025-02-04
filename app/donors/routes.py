@@ -1,12 +1,15 @@
-from flask_babel import gettext as _
+import tempfile
 from datetime import date
 
-from flask import (Blueprint, abort, flash, redirect, render_template, request,
-                   url_for)
+from flask import (Blueprint, abort, flash, redirect, render_template,
+                   send_file, url_for)
+from flask_babel import gettext as _
 from flask_login import current_user
+from fpdf import FPDF
 
 from app.auth.user_service import roles_required
-from app.extensions import csrf, db
+from app.extensions import db
+from app.forms.donations_wtf import CreateDonationForm
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -15,7 +18,6 @@ from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
 from app.models.organization import Organization
-from app.forms.donations_wtf import CreateDonationForm
 
 bp = Blueprint('donors', __name__,
                template_folder='../templates/donors',
@@ -148,18 +150,69 @@ def confirm_point(donation_item_id):
         return redirect('/')
 
     flash(str(donation.return_confirmation()))
-    return redirect('/donors/donations')
+    return redirect(url_for('donors.list_donations'))
 
 
-@bp.route('/confirm-money/<int:id>', methods=['POST'])
-def confirm_money(donation_money_id):
+@bp.route('/download-pdf/<int:donation_money_id>', methods=['GET'])
+def download_pdf(donation_money_id):
     donation = db.session.scalar(db.select(DonationMoney).filter(DonationMoney.donationMoney_id == donation_money_id))
     if not donation:
         flash("Nie znaleziono przedmiotu o podanym ID.")
         return redirect('/')
 
-    flash(str(donation.return_confirmation()))
-    return redirect('/donors/donations')
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    # Add SKPH header
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
+    pdf.ln(10)
+
+    # Donation details
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Arial", size=12)
+
+    # Table headers
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(50, 10, txt="Field", border=1, align='C')
+    pdf.cell(140, 10, txt="Details", border=1, align='C')
+    pdf.ln(10)
+
+    # Table content
+    pdf.set_font("Arial", size=12)
+    pdf.cell(50, 10, txt="Description", border=1)
+    pdf.cell(140, 10, txt=donation.description, border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Amount", border=1)
+    pdf.cell(140, 10, txt=str(donation.cashAmount), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Date", border=1)
+    pdf.cell(140, 10, txt=str(donation.donation_date), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Donor ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.donor_id), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Charity Campaign ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
+    pdf.ln(10)
+
+    # Footer
+    pdf.set_font("Arial", 'I', 10)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')
+    pdf.cell(200, 10, txt="Visit our website: www.skph.org", ln=True, align='C')
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpfile:
+        pdf_output = tmpfile.name
+        pdf.output(pdf_output)
+
+    response = send_file(pdf_output, as_attachment=True)
+    return response
 
 
 @bp.route('/samples', methods=['POST'])

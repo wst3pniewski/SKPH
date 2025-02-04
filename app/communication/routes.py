@@ -41,6 +41,7 @@ def search_users():
         User.email.ilike(f'%{query}%'),
         User.email != current_email
     ).all()
+    print([{'email': user.email} for user in users])
     return jsonify([{'email': user.email} for user in users])
 
 
