@@ -17,7 +17,7 @@ from app.models.organization import Organization
 from app.models.task import Task
 from app.models.volunteer import Volunteer
 from app.forms.volunteers_wtf import VolunteerSignToCharityCampaignForm
-from app.forms.tasks_wtf import CreateTaskForm
+from app.forms.tasks_wtf import CreateTaskForm, EvaluateTaskForm
 
 bp = Blueprint('organization', __name__, template_folder='../templates/organization')
 
@@ -299,13 +299,20 @@ def eval_task(charity_campaign_id, task_id):
         flash('Task not found.', 'warning')
         return redirect(url_for('organization.manage_volunteers', charity_campaign_id=charity_campaign_id))
 
-    if request.method == 'POST':
+    status_translations = {
+        'completed': _('Completed'),
+        'ongoing': _('Ongoing'),
+        'rejected': _('Rejected')
+    }
+
+    form = EvaluateTaskForm()
+    if form.validate_on_submit():
         if task.status != 'completed':
             flash('You can only evaluate completed tasks!', 'warning')
             return redirect(url_for('organization.manage_volunteers', charity_campaign_id=charity_campaign_id))
         if not task.evaluation_:
-            score = request.form['score']
-            description = request.form['description']
+            score = form.score.data
+            description = form.description.data
             task_evaluation = Evaluation(score=score, description=description)
             task.evaluation_ = task_evaluation
             db.session.add(task)
@@ -323,7 +330,9 @@ def eval_task(charity_campaign_id, task_id):
                            task=task,
                            referrer=referrer,
                            charity_campaign_id=charity_campaign_id,
-                           volunteer_id=task.volunteer.id)
+                           volunteer_id=task.volunteer.id,
+                           status_translations=status_translations,
+                           form=form)
 
 
 @bp.route('/charity_campaign/<int:charity_campaign_id>/volunteer/<int:volunteer_id>/tasks')

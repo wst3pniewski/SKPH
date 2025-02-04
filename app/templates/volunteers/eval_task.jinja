@@ -7,24 +7,36 @@
   <div class="row justify-content-center">
     <div class="col-md-6">
       <h3>{{ _("Evaluate Task") }}</h3>
-      <p>{{ _("Task:") }} {{ task.name }}</p>
-      <p>{{ _("Volunteer:") }} {{ task.volunteer.first_name }} {{ task.volunteer.last_name }}</p>
-      <p>{{ _("Task Description:") }} {{ task.description }}</p>
-      <p>{{ _("Task Status:") }} {{ task.status }}</p>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{ _("Task Details") }}</h5>
+          <hr>
+          <p class="card-text"><strong>{{ _("Task") }}:</strong> {{ task.name }}</p>
+          <p class="card-text"><strong>{{ _("Volunteer") }}:</strong> {{ task.volunteer.first_name }} {{
+            task.volunteer.last_name }}</p>
+          <p class="card-text"><strong>{{ _("Task Description") }}:</strong> {{ task.description }}</p>
+          <p class="card-text">
+            <strong>{{ _("Task Status") }}:</strong>
+            {% if task.status == 'completed' %}
+            <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
+            {% elif task.status == 'rejected' %}
+            <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
+            {% else %}
+            <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
       <form method="post">
+        {{ form.hidden_tag() }}
         <fieldset>
-          <div class="form-group">
-            <label for="score">{{ _("Score") }}</label>
-            <select class="form-control" id="score" name="score" required>
-              <option value="" disabled selected>{{ _("Select a score") }}</option>
-              {% for i in range(1,6) %}
-              <option value="{{ i }}">{{ i }}</option>
-              {% endfor %}
-            </select>
+          <div class="form-group mb-3">
+            {{ form.score.label(class="form-label") }}
+            {{ form.score(class="form-select") }}
           </div>
-          <div class="form-group">
-            <label for="description">{{ _("Description:") }}</label>
-            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+          <div class="form-group mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
           </div>
         </fieldset>
         <div>
