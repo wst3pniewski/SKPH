@@ -13,6 +13,7 @@
     </p>
   </div>
 </div>
+{% if current_user.is_authenticated %}
 <div class="p-5">
   <!-- ADMIN -->
   {% if current_user.type == 'admin' %}
@@ -126,6 +127,7 @@
   </div>
   {% endif %}
 </div>
+{% endif %}
 {% if current_user.is_authenticated == False %}
 <div class="text-center">
   <section class="py-5">

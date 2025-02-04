@@ -10,11 +10,12 @@ class DonationMoney(db.Model):
     donationMoney_id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str]
     donation_date: Mapped[date] = date.today()
-    donation_type: Mapped[str]
+    donation_type_id: Mapped[int] = mapped_column(ForeignKey('donation_type.id'))
+    donation_type = relationship('DonationType')
     cashAmount: Mapped[float]
-    donor_id: Mapped[int] = mapped_column(ForeignKey('donor.donor_id'))
     charity_campaign_id: Mapped[int] = mapped_column(ForeignKey('organization_charity_campaign.id'))
     charity_campaign = relationship('OrganizationCharityCampaign')
+    donor_id: Mapped[int] = mapped_column(ForeignKey('donor.donor_id'))
     donor: Mapped["Donor"] = relationship(back_populates="donations_money")
 
     def return_confirmation(self) -> str:

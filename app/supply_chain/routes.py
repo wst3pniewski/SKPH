@@ -8,7 +8,6 @@ from app.auth.user_service import roles_required
 from app.extensions import csrf, db
 from app.forms.supply_chain_wtf import (ManageRequestForm,
                                         SelectCharityCampaignForm)
-from app.models import authorities
 from app.models.address import Address
 from app.models.affected import Affected
 from app.models.authorities import Authorities

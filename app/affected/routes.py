@@ -43,7 +43,7 @@ def send_status_update_email(user, request_obj):
 
 
 def initialize_donation_types():
-    donation_types = ['Food', 'Clothes', 'Shelter', 'Medical Supplies']
+    donation_types = ['Food', 'Clothes', 'Shelter', 'Medical Supplies', 'Money']
     existing_types = db.session.query(DonationType.type).all()
     existing_types = [type[0] for type in existing_types]
 
@@ -112,7 +112,6 @@ def select_affected():
 @roles_required(['organization', 'authorities'])
 def all_requests():
     requests = db.session.scalars(db.select(Request)).all()
-
     return render_template('all_requests.jinja', requests=requests)
 
 
@@ -126,7 +125,7 @@ def create_request():
         return redirect(url_for('affected.index'))
 
     form = CreateRequestForm()
-    # translation
+    # translation purpose
     donation_types = [_('Food'), _('Clothes'), _('Shelter'), _('Medical Supplies')]
 
     form.needs.choices = [(dt.id, _(dt.type)) for dt in db.session.scalars(db.select(DonationType)).all()]

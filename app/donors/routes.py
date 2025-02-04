@@ -53,19 +53,18 @@ def create_donation():
         type_d = request.form['donation_type']
         charity_campaign = request.form['organization_charity_campaign_id']
         amount = request.form['amount']
-        if type_d == 'money':
+        if type_d == 'Money':
+            money_type = DonationType.query.filter(DonationType.type == 'Money').first()
+
             new_donation_money = DonationMoney(
                 description=description,
                 donation_date=date.today(),
-                donation_type="Money",
+                donation_type=money_type,
                 cashAmount=amount,
-                donor_id=donor.donor_id,
+                donor=donor,
                 charity_campaign_id=charity_campaign
             )
             db.session.add(new_donation_money)
-            money_type = DonationType.query.filter(DonationType.type == 'Money').first()
-            if money_type is None:
-                money_type = DonationMoney(type='Money')
 
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
                 .filter(ItemStock.organization_charity_campaign_id == charity_campaign, DonationType.type == 'Money') \
@@ -76,14 +75,12 @@ def create_donation():
                                       organization_charity_campaign_id=charity_campaign,
                                       amount=amount)
                 db.session.add(new_stock)
-
             else:
                 curr_stock.amount += float(amount)
                 db.session.add(curr_stock)
 
             db.session.commit()
             flash('Donation created successfully')
-            del new_donation_money
         else:
             new_donation_item = DonationItem(
                 description=description,
@@ -110,7 +107,6 @@ def create_donation():
 
             db.session.commit()
             flash('Donation created successfully')
-            del new_donation_item
 
         return redirect(url_for('home', donor_id=donor.donor_id))
     return render_template('create_donation.jinja',
