@@ -24,11 +24,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -42,7 +42,7 @@
                     {% if task.evaluation_ %}
                     Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
                     {% else %}
-                    <span class="badge badge-info">{{ _("Not evaluated") }}</span>
+                    <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
                 </td>
             </tr>
@@ -67,11 +67,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -85,7 +85,7 @@
                     {% if task.evaluation_ %}
                     Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
                     {% else %}
-                    <span class="badge badge-info">{{ _("Not evaluated") }}</span>
+                    <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
                 </td>
             </tr>

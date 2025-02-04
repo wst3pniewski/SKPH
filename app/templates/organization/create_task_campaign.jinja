@@ -8,48 +8,43 @@
     <div class="col-md-6">
       {% if volunteers %}
       <form method="post">
+        {{ form.hidden_tag() }}
         <legend>{{ _("Create a New Task") }}</legend>
         <fieldset>
           <div class="form-group">
-            <label for="name">{{ _("Task Name:") }}</label>
-            <input type="text" class="form-control" id="name" name="name" placeholder="{{ _('Task name') }}">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
           </div>
           <div class="form-group">
-            <label for="exampleTextarea">{{ _("Description:") }}</label>
-            <textarea class="form-control" id="description" name="description" rows="3" placeholder="{{ _('Opis') }}"
-              required></textarea>
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
           </div>
-          <div>
-            <label for="volunteer_id">{{ _("Volunteer:") }}</label>
-            <select class="form-control" id="volunteer_id" name="volunteer_id" required>
-              {% for volunteer in volunteers %}
-              <option value="{{ volunteer.id }}">{{ volunteer.first_name }} {{ volunteer.last_name }}
-              </option>
-              {% endfor %}
-            </select>
+          <div class="form-group">
+            {{ form.volunteer_id.label(class="form-label") }}
+            {{ form.volunteer_id(class="form-control") }}
           </div>
           <br>
-          <div>
-            <button type="submit" class="btn btn-primary">{{ _("Create task") }}</button>
+          <div class="form-group">
+            {{ form.submit(class="btn btn-primary") }}
           </div>
         </fieldset>
       </form>
       {% elif volunteer_id %}
       <form method="post">
+        {{ form.hidden_tag() }}
         <legend>{{ _("Create a New Task") }}</legend>
         <fieldset>
           <div class="form-group">
-            <label for="name">{{ _("Task Name:") }}</label>
-            <input type="text" class="form-control" id="name" name="name" placeholder="{{ _('Task name') }}">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
           </div>
           <div class="form-group">
-            <label for="exampleTextarea">{{ _("Description:") }}</label>
-            <textarea class="form-control" id="description" name="description" rows="3" placeholder="{{ _('Opis') }}"
-              required></textarea>
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
           </div>
           <br>
-          <div>
-            <button type="submit" class="btn btn-primary">{{ _("Create task") }}</button>
+          <div class="form-group">
+            {{ form.submit(class="btn btn-primary") }}
           </div>
         </fieldset>
       </form>
@@ -59,7 +54,7 @@
         <p class="mb-0">
           {{ _("No volunteers are assigned to your charity campaign") }} <a
             href="{{ url_for('organization.list_my_charity_campaigns') }}" class="alert-link">
-            {{_("Return to your campaings") }}</a>.
+            {{_("Return to your campaigns") }}</a>.
         </p>
       </div>
       {% endif %}

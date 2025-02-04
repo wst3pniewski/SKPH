@@ -9,6 +9,7 @@ from app.models.address import Address
 from app.models.evaluation import Evaluation
 from app.models.task import Task
 from app.models.volunteer import Volunteer
+from app.forms.volunteers_wtf import UpdateTaskStatusForm
 
 bp = Blueprint('volunteers', __name__,
                template_folder='../templates/volunteers',
@@ -32,13 +33,17 @@ def update_task_status(task_id):
         return abort(404)
     if task.volunteer_id != volunteer.id:
         return abort(403)
-    if request.method == 'POST':
-        new_status = request.form['status']
-        task.status = new_status
+
+    form = UpdateTaskStatusForm()
+    form.status.choices = [(status, _(status.capitalize())) for status in task.AVAILABLE_STATUS]
+
+    if form.validate_on_submit():
+        task.status = form.status.data
         db.session.commit()
         return redirect(url_for('volunteers.list_my_tasks'))
+
     referrer = url_for('volunteers.list_my_tasks')
-    return render_template('update_task_status.jinja', task=task, referrer=referrer)
+    return render_template('update_task_status.jinja', task=task, form=form, referrer=referrer)
 
 
 @bp.route('volunteer/charity_campaign/<int:charity_campaign_id>/tasks')

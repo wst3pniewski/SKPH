@@ -7,18 +7,15 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <h1>{{ _("Update Task Status") }}</h1>
-            <form method="POST">
-                <div class="form-group">
-                    <label for="status">{{ _("Status") }}</label>
-                    <select class="form-control" id="status" name="status">
-                        {% for status in task.AVAILABLE_STATUS %}
-                        <option value="{{ status }}" {% if task.status==status %}selected{% endif %}>
-                            {{ _(status.capitalize()) }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            <form method="POST" action="{{ url_for('volunteers.update_task_status', task_id=task.id) }}">
+                {{ form.hidden_tag() }}
+                <div class="form-group mb-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
                 </div>
-                <button type="submit" class="btn btn-primary">{{ _("Update Status") }}</button>
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
             </form>
         </div>
     </div>

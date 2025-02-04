@@ -16,6 +16,8 @@ from app.models.evaluation import Evaluation
 from app.models.organization import Organization
 from app.models.task import Task
 from app.models.volunteer import Volunteer
+from app.forms.volunteers_wtf import VolunteerSignToCharityCampaignForm
+from app.forms.tasks_wtf import CreateTaskForm
 
 bp = Blueprint('organization', __name__, template_folder='../templates/organization')
 
@@ -234,18 +236,24 @@ def create_task(organization_charity_campaign_id):
     organization = db.session.get(Organization, current_user.organization.id)
     if organization.id != organization_campaign.organization_id:
         return abort(403)
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
-        volunteer_id = request.form['volunteer_id']
+
+    form = CreateTaskForm()
+    form.volunteer_id.choices = [(volunteer.id, f"{volunteer.first_name} {volunteer.last_name}") for volunteer in organization_campaign.volunteers]
+
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
+        volunteer_id = form.volunteer_id.data
         new_task = Task(name=name, description=description,
                         volunteer_id=volunteer_id, charity_campaign_id=organization_charity_campaign_id)
         db.session.add(new_task)
         db.session.commit()
-        flash('Task create successfully!')
+        flash(_('Task created successfully!'))
         return redirect(url_for('organization.list_my_charity_campaigns'))
+
     referrer = request.referrer or url_for('organization.list_my_charity_campaigns')
     return render_template('create_task_campaign.jinja',
+                           form=form,
                            volunteers=organization_campaign.volunteers,
                            campaign=organization_campaign,
                            referrer=referrer)
@@ -255,14 +263,17 @@ def create_task(organization_charity_campaign_id):
           methods=['GET', 'POST'])
 @roles_required(['organization'])
 def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_id):
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
+    form = CreateTaskForm()
+    form.volunteer_id.choices = [(volunteer_id, volunteer_id)]  # Only one choice for specific volunteer
+
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
         new_task = Task(name=name, description=description,
                         volunteer_id=volunteer_id, charity_campaign_id=organization_charity_campaign_id)
         db.session.add(new_task)
         db.session.commit()
-        flash('Task create successfully!')
+        flash(_('Task created successfully!'))
         return redirect(url_for('organization.view_volunteer_tasks',
                                 charity_campaign_id=organization_charity_campaign_id,
                                 volunteer_id=volunteer_id))
@@ -270,6 +281,7 @@ def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_i
     organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
     referrer = request.referrer
     return render_template('create_task_campaign.jinja',
+                           form=form,
                            volunteer_id=volunteer_id,
                            campaign=organization_campaign,
                            referrer=referrer)
@@ -364,9 +376,19 @@ def remove_volunteer(organization_charity_campaign_id, volunteer_id):
 @roles_required(['volunteer'])
 def volunteer_sign_to_charity_campaign():
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))
+    form = VolunteerSignToCharityCampaignForm()
     if volunteer:
-        if request.method == 'POST':
-            organization_charity_campaign_id = request.form['organization_charity_campaign_id']
+        organization_charity_campaigns = db.session.scalars(
+            db.select(OrganizationCharityCampaign)
+            .where(~OrganizationCharityCampaign.volunteers.any(Volunteer.id == volunteer.id))
+        ).all()
+        form.organization_charity_campaign_id.choices = [
+            (campaign.id, f"{campaign.charity_campaign.name} ({campaign.organization.organization_name})")
+            for campaign in organization_charity_campaigns
+        ]
+
+        if form.validate_on_submit():
+            organization_charity_campaign_id = form.organization_charity_campaign_id.data
             organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
 
             if organization_campaign and volunteer:
@@ -376,10 +398,8 @@ def volunteer_sign_to_charity_campaign():
                 return redirect(url_for('organization.list_volunteer_charity_campaigns',
                                         charity_campaign_id=organization_charity_campaign_id))
 
-        organization_charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
-        organization_charity_campaigns = (
-            [campaign for campaign in organization_charity_campaigns if volunteer not in campaign.volunteers])
         return render_template('volunteer_sign_to_charity_campaign.jinja',
+                               form=form,
                                organization_charity_campaigns=organization_charity_campaigns)
     else:
         return abort(404)

@@ -12,8 +12,8 @@
                 <fieldset>
                     <legend>{{ _("Sign to Charity Campaign") }}</legend>
                     <div class="form-group">
-                        {{ form.charity_campaign_id.label }}<br>
-                        {{ form.charity_campaign_id(class="form-control") }}<br>
+                        {{ form.charity_campaign_id.label(class="form-label") }}<br>
+                        {{ form.charity_campaign_id(class="form-select") }}<br>
                         {% for error in form.charity_campaign_id.errors %}
                         <span style="color: red;">[{{ error }}]</span>
                         {% endfor %}

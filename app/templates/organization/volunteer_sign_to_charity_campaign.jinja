@@ -13,20 +13,14 @@
             {% if organization_charity_campaigns %}
             <h1>{{ _("Sign to Charity Campaign") }}</h1>
             <form method="post">
-                <fieldset>
-                    <div class="form-group">
-                        <label for="organization_charity_campaign_id">{{ _("Charity Campaign:") }}</label>
-                        <select class="form-control" id="organization_charity_campaign_id"
-                            name="organization_charity_campaign_id" required>
-                            {% for campaign in organization_charity_campaigns %}
-                            <option value="{{ campaign.id }}">{{ campaign.charity_campaign.name }} ({{
-                                campaign.organization.organization_name }})</option>
-                            {% endfor %}
-                        </select>
-                        <br>
-                        <button type="submit" class="btn btn-primary">{{ _("Sign In") }}</button>
-                    </div>
-                </fieldset>
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.organization_charity_campaign_id.label(class="form-label") }}
+                    {{ form.organization_charity_campaign_id(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
             </form>
             {% else %}
             <div class="alert alert-dismissible alert-warning">
