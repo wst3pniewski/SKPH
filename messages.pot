@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-03 21:25+0100\n"
+"POT-Creation-Date: 2025-02-04 08:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Food"
 msgstr ""
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Clothes"
 msgstr ""
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Shelter"
 msgstr ""
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Medical Supplies"
 msgstr ""
 

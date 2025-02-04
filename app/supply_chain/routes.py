@@ -1,4 +1,3 @@
-from app.extensions import csrf
 from datetime import datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -6,7 +5,7 @@ from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 
 from app.auth.user_service import roles_required
-from app.extensions import db
+from app.extensions import csrf, db
 from app.forms.supply_chain_wtf import (ManageRequestForm,
                                         SelectCharityCampaignForm)
 from app.models import authorities
@@ -97,7 +96,7 @@ def index():
                            form=form)
 
 
-@bp.route('/request/<int:req_id>', methods=['GET', 'POST'])
+@bp.route('/request/<int:request_id>', methods=['GET', 'POST'])
 @roles_required('organization')
 def manage_request(request_id):
     curr_request_data = get_request_data(req_id=request_id)
@@ -112,8 +111,9 @@ def manage_request(request_id):
         .filter(ItemStock.organization_charity_campaign_id == curr_charity_campaign.id) \
         .first()
 
+    from flask_babel import gettext as _
     form = ManageRequestForm()
-    form.donation_type.choices = [(dt.id, dt.type) for dt in DonationType.query.all()]
+    form.donation_type.choices = [(dt.id, _(dt.type)) for dt in DonationType.query.all()]
 
     if form.validate_on_submit():
         if stock_item is None:

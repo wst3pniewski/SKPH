@@ -49,12 +49,20 @@
             <div class="dropdown">
               <button class="btn btn-dark dropdown-toggle mx-3" type="button" id="languageDropdown"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                🌐 {{ _("Language") }}
+                <i class="fas fa-globe"></i> {{ _("Language") }}
               </button>
               <div class="dropdown-menu dropdown-menu-dark" aria-labelledby="languageDropdown">
-                <button type="submit" name="lang" value="en" class="dropdown-item">🇬🇧 English</button>
+                <button type="submit" name="lang" value="en" class="dropdown-item">
+                  <img class="mx-2" src="{{ url_for('static', filename='flags/gb.svg') }}" alt="England-flag" width="20"
+                    height="20">
+                  English
+                </button>
                 <hr class="dropdown-divider">
-                <button type="submit" name="lang" value="pl" class="dropdown-item">🇵🇱 Polski</button>
+                <button type="submit" name="lang" value="pl" class="dropdown-item">
+                  <img class="mx-2" src="{{ url_for('static', filename='flags/pl.svg') }}" alt="Poland-flag" width="20"
+                    height="20">
+                  Polski
+                </button>
               </div>
             </div>
           </form>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-03 21:25+0100\n"
+"POT-Creation-Date: 2025-02-04 08:01+0100\n"
 "PO-Revision-Date: 2025-01-21 18:00+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -19,19 +19,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Food"
-msgstr ""
+msgstr "Jedzenie"
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Clothes"
-msgstr ""
+msgstr "Ubrania"
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Shelter"
 msgstr "Schronienie"
 
-#: app/affected/routes.py:46
+#: app/affected/routes.py:130
 msgid "Medical Supplies"
 msgstr "Zasoby Medyczne"
 
@@ -444,7 +444,9 @@ msgstr "Usuń 2FA"
 
 #: app/templates/profile.jinja:87
 msgid "Enhance your account security by enabling two-factor authentication"
-msgstr "Zwiększ bezpieczeństwo swojego konta, włączając uwierzytelnianie dwuskładnikowe."
+msgstr ""
+"Zwiększ bezpieczeństwo swojego konta, włączając uwierzytelnianie "
+"dwuskładnikowe."
 
 #: app/templates/profile.jinja:101
 msgid "Edit Profile"
@@ -598,7 +600,7 @@ msgstr "Województwo"
 #: app/templates/organization/organization_profile.jinja:43
 #: app/templates/volunteers/volunteer_profile.jinja:40
 msgid "ZIP Code"
-msgstr ""
+msgstr "Kod Pocztowy"
 
 #: app/templates/affected/affected_auth_details.jinja:53
 #: app/templates/affected/affected_auth_details.jinja:73
@@ -897,7 +899,7 @@ msgstr "Powrót do informacji"
 
 #: app/templates/affected/edit_request_wtf.jinja:48
 msgid "Save Changes"
-msgstr ""
+msgstr "Zapisz Zmiany"
 
 #: app/templates/affected/select_affected.jinja:3
 #: app/templates/affected/select_affected.jinja:9
@@ -1876,7 +1878,7 @@ msgstr "Zarządzanie Kampanią Pomocową"
 
 #: app/templates/supply_chain/supply_chain.jinja:36
 msgid "Account Balance"
-msgstr ""
+msgstr "Stan Konta"
 
 #: app/templates/supply_chain/supply_chain.jinja:41
 msgid "Avaliable Items:"
@@ -2067,4 +2069,16 @@ msgstr "Zobacz Listę Wszystkich Wolontariuszy"
 
 #~ msgid "Last name:"
 #~ msgstr "Nazwisko:"
+
+#~ msgid "Food"
+#~ msgstr "Jedzenie"
+
+#~ msgid "Clothes"
+#~ msgstr "Ubrania"
+
+#~ msgid "Shelter"
+#~ msgstr "Schronienie"
+
+#~ msgid "Medical Supplies"
+#~ msgstr "Zasoby Medyczne"
 

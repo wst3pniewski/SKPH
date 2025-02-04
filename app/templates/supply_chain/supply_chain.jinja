@@ -55,7 +55,7 @@
         {% for donation in item_donations %}
         <tr>
           <td>{{ loop.index }}</td>
-          <td>{{ donation.item_type.type }}</td>
+          <td>{{ _(donation.item_type.type) }}</td>
           <td>{{ donation.amount }}</td>
           <td>{{ donation.organization_charity_campaign.charity_campaign.name }}</td>
         </tr>
@@ -83,7 +83,7 @@
         </tr>
       </thead>
       {% for request in organization_charity_campaign.requests %}
-      {% if request.status.value == 'Pending' %}
+      {% if request.status.value == request_status.PENDING.value %}
       <tbody>
         <tr>
           <td>{{ loop.index }}</td>
@@ -115,10 +115,10 @@
               </tr>
             </table>
           </td>
-          <td>{{ request.donation_type.type }}</td>
+          <td>{{ _(request.donation_type.type) }}</td>
           <td>{{ request.amount }}</td>
           <td>
-            <a class="btn btn-primary" href="{{ url_for('supply_chain.manage_request', req_id=request.id) }}">
+            <a class="btn btn-primary" href="{{ url_for('supply_chain.manage_request', request_id=request.id) }}">
               {{ _("Manage request") }}
             </a>
           </td>
@@ -153,7 +153,7 @@
           <td>{{ loop.index }}</td>
           <td>{{ donation.description }}</td>
           <td>{{ donation.amount }}</td>
-          <td>{{ donation.donation_type.type }}</td>
+          <td>{{ _(donation.donation_type.type) }}</td>
           <td>{{ donation.donation_date }}</td>
           <td>{{ donation.donor.first_name }} {{donation.donor.last_name}}</td>
         </tr>
@@ -183,7 +183,7 @@
         <td>{{ loop.index }}</td>
         <td>{{ donation.description }}</td>
         <td>{{ donation.cashAmount }}</td>
-        <td>{{ donation.donation_type }}</td>
+        <td>{{ _(donation.donation_type.type) }}</td>
         <td>{{ donation.donation_date }}</td>
         <td>{{ donation.donor.name}} {{donation.donor.surname}}</td>
       </tr>
@@ -212,7 +212,7 @@
         </tr>
       </thead>
       {% for request in organization_charity_campaign.requests %}
-      {% if request.status.value == 'Completed' %}
+      {% if request.status.value == request_status.COMPLETED.value %}
       <tbody>
         <tr>
           <td>{{ loop.index }}</td>
@@ -244,7 +244,7 @@
               </tr>
             </table>
           </td>
-          <td>{{ request.donation_type.type }}</td>
+          <td>{{ _(request.donation_type.type) }}</td>
           <td>{{ request.amount }}</td>
         </tr>
       </tbody>
