@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from app.auth.user_service import roles_required
 from app.extensions import db
 from app.forms.charity_campaigns_wtf import (CharityCampaignForm,
-                                             SignToCharityCampaignForm)
+                                             SignToCharityCampaignForm, ManageCharityCampaignForm)
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -126,21 +126,13 @@ def list_authorities_charity_campaigns(authorities_id):
 def manage_charity_campaign(charity_campaign_id):
     charity_campaign = db.session.get(CharityCampaign, charity_campaign_id)
     if current_user.authorities.id == charity_campaign.authorities_id:
-        if request.method == 'POST':
-            name = request.form['name']
-            description = request.form['description']
-            is_active = request.form.get('is_active') == 'true'
-
-            charity_campaign.name = name
-            charity_campaign.description = description
-            charity_campaign.is_active = is_active
-
-            db.session.add(charity_campaign)
+        form = ManageCharityCampaignForm(obj=charity_campaign)
+        if form.validate_on_submit():
+            form.populate_obj(charity_campaign)
             db.session.commit()
             return redirect(url_for('organization.list_authorities_charity_campaigns',
                                     authorities_id=current_user.authorities.id))
-        return render_template('manage_charity_campaign.jinja',
-                               campaign=charity_campaign)
+        return render_template('manage_charity_campaign.jinja', form=form, campaign=charity_campaign)
     else:
         return abort(403)
 
