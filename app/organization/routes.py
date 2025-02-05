@@ -1,6 +1,5 @@
-from flask import session
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
-                   url_for)
+                   session, url_for)
 from flask_babel import gettext as _
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
@@ -8,7 +7,10 @@ from sqlalchemy.orm import joinedload
 from app.auth.user_service import roles_required
 from app.extensions import db
 from app.forms.charity_campaigns_wtf import (CharityCampaignForm,
-                                             SignToCharityCampaignForm, ManageCharityCampaignForm)
+                                             ManageCharityCampaignForm,
+                                             SignToCharityCampaignForm)
+from app.forms.tasks_wtf import CreateTaskForm, EvaluateTaskForm
+from app.forms.volunteers_wtf import VolunteerSignToCharityCampaignForm
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -17,8 +19,6 @@ from app.models.evaluation import Evaluation
 from app.models.organization import Organization
 from app.models.task import Task
 from app.models.volunteer import Volunteer
-from app.forms.volunteers_wtf import VolunteerSignToCharityCampaignForm
-from app.forms.tasks_wtf import CreateTaskForm, EvaluateTaskForm
 
 bp = Blueprint('organization', __name__, template_folder='../templates/organization')
 

@@ -12,7 +12,7 @@
       {{ form.status(class="form-select") }}
     </div>
     <button type="submit" class="btn btn-success">{{ _("Update") }}</button>
-    <a href="{{ url_for('affected.all_requests') }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
+    <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
   </form>
 </div>
 {% endblock %}

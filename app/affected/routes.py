@@ -1,18 +1,19 @@
-from flask_babel import gettext as _
 from flask import (Blueprint, flash, redirect, render_template,
-                   render_template_string, request, url_for)
+                   render_template_string, request, session, url_for)
+from flask_babel import gettext as _
 from flask_login import current_user
 from flask_mailman import EmailMessage
 
 from app.auth.user_service import roles_required
 from app.extensions import db, mail
+from app.forms.requests_wtf import CreateRequestForm, UpdateRequestStatusForm
 from app.models.address import Address
 from app.models.affected import Affected
 from app.models.authorities import Authorities
-from app.models.charity_campaign import CharityCampaign, OrganizationCharityCampaign
+from app.models.charity_campaign import (CharityCampaign,
+                                         OrganizationCharityCampaign)
 from app.models.donation import DonationType
 from app.models.request import Request, RequestStatus
-from app.forms.requests_wtf import UpdateRequestStatusForm, CreateRequestForm
 
 bp = Blueprint('affected', __name__,
                template_folder='../templates/affected',
@@ -107,9 +108,12 @@ def select_affected():
 @bp.route('/organization-charity-campaign/requests')
 @roles_required(['organization', 'authorities'])
 def requests_for_org_charity_campaign():
+    if 'original_referrer' not in session:
+        session['original_referrer'] = request.referrer
     organization_charity_campaign_id = request.args.get('organization_charity_campaign_id', type=int)
     requests = Request.query.filter(Request.charity_campaign_id == organization_charity_campaign_id).all()
-    return render_template('view_requests.jinja', requests=requests)
+    original_referrer = session.get('original_referrer')
+    return render_template('view_requests.jinja', requests=requests, referrer=original_referrer)
 
 
 @bp.route('/request/create', methods=['GET', 'POST'])
@@ -213,7 +217,7 @@ def update_request_status(request_id):
 
         return redirect(url_for('affected.affected_details', affected_id=request_obj.affected_id))
 
-    return render_template('update_request_status.jinja', form=form, request=request_obj, statuses=RequestStatus)
+    return render_template('update_request_status.jinja', form=form, request=request_obj, statuses=RequestStatus, referrer=request.referrer)
 
 
 @bp.route('/request/delete/<int:request_id>', methods=['POST', 'GET'])
