@@ -1,6 +1,7 @@
 # Core dependencies
 Flask == 3.0.3
 Flask-SQLAlchemy == 3.1.1
+Flask-Migrate==4.1.0
 flask-babel == 4.0.0
 Flask-Admin == 1.6.1
 psycopg2-binary == 2.9.10
@@ -34,5 +35,5 @@ geopy == 2.4.1
 
 # Monitoring
 
-# Confirmations
+# PDF
 fpdf2>=2.8.2

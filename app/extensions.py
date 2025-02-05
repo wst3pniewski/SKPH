@@ -4,6 +4,7 @@ from flask_mailman import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
+from flask_migrate import Migrate
 
 
 class Base(DeclarativeBase):
@@ -18,3 +19,4 @@ db = SQLAlchemy(model_class=Base)
 babel = Babel()
 mail = Mail()
 csrf = CSRFProtect()
+migrate = Migrate()
