@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
+from .notification import Notification
 
 
 class User(db.Model, UserMixin):
@@ -24,6 +25,7 @@ class User(db.Model, UserMixin):
     donor = db.relationship('Donor', backref='user', uselist=False)
     affected = db.relationship('Affected', backref='user', uselist=False)
     authorities = db.relationship('Authorities', backref='user', uselist=False)
+    notifications = db.relationship('Notification', back_populates='user', cascade='all, delete-orphan')
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)

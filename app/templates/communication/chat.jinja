@@ -40,8 +40,6 @@
 {% endblock %}
 
 {% block ascript %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
-
 <script>
   $(document).ready(function () {
     const socket = io();
@@ -98,14 +96,13 @@
           messages.forEach(msg => {
             const profilePicture = msg.sender_profile_picture ? `{{ url_for('static', filename='uploads/') }}${msg.sender_profile_picture}` : `{{ url_for('static', filename='uploads/base_profile_picture.jpg') }}`;
             let formattedMessage;
-
             if (msg.sender === email) {
               // If the sender is the current user, show the content first
               formattedMessage = `
                   <div class="flex-container align-items-start mb-2 text-end">
                     <div class="row justify-content-end">
                       <div class="col-md-10">
-                          <div class='text-bg-primary rounded p-2 text-start' style="display: inline-block; max-width: 30%;  min-width: 20%; word-wrap: break-word;">
+                          <div class='text-bg-primary rounded p-2 text-start' style="display: inline-block; max-width: 30%;  min-width: 5%; word-wrap: break-word;">
                             <p class="mb-0"><strong>${msg.content}</strong></p>
                             <small class="timestamp" style="display: none;">${msg.timestamp}</small>
                           </div>
@@ -115,16 +112,7 @@
                   </div>`;
             } else {
               // If the sender is not the current user, show the sender first
-              /*formattedMessage = `
-              <div class="flex-container align-items-start mb-2 text-start"> 
-                <div class='text-bg-secondary rounded p-2' style="display: inline-block; max-width: 30%; min-width: 10%; word-wrap: break-word;">
-                  <p class="mb-0">
-                  <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="25" height="25">
-                  ${msg.content}
-                  </p>
-                  <small class="timestamp" style="display: none;">${msg.timestamp}</small>
-                </div>
-              </div>`;*/
+              console.log(msg.content)
               formattedMessage = `
               <div class="flex-container align-items-start text-start mb-2">
                 <img src="${profilePicture}" alt="Profile Picture" class="rounded-circle m-2" width="20" height="20">
@@ -140,7 +128,6 @@
                   </div>
             </div>`;
             }
-
             messagesDiv.append(formattedMessage);
           });
           messagesDiv.scrollTop(messagesDiv[0].scrollHeight);
