@@ -67,7 +67,7 @@ def get_messages():
         'sender': message.sender.email,
         'sender_profile_picture': message.sender.profile_picture,
         'content': message.content,
-        'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        'timestamp': message.timestamp.strftime('%H:%M %d-%m-%Y')
     } for message in messages])
 
 
