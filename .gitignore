@@ -27,3 +27,6 @@ htmlcov/
 
 # Uploads
 app/static/uploads/
+
+# Logs
+logs/

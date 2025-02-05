@@ -1,4 +1,6 @@
+import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 from flask import Flask, redirect, render_template, request
 from sqlalchemy import text
@@ -19,6 +21,17 @@ from app.supply_chain.routes import bp as supply_chain_bp
 from app.volunteers.routes import bp as volunteers_bp
 from config import config
 
+# Create logs directory if it doesn't exist
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Set up logging
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
+
 
 def create_app(config_name=None):
     if config_name is None:
@@ -33,6 +46,11 @@ def create_app(config_name=None):
     mail.init_app(flask_app)
     socketio.init_app(flask_app)
     csrf.init_app(flask_app)
+
+    # Logging
+    flask_app.logger.addHandler(file_handler)
+    flask_app.logger.setLevel(logging.INFO)
+    flask_app.logger.info('Application startup')
 
     with flask_app.app_context():
         # db.drop_all()

@@ -1,3 +1,4 @@
+from flask import current_app as app
 from flask_socketio import SocketIO, emit, join_room
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -37,10 +38,10 @@ def handle_message(data):
                 'sender_profile_picture': sender.profile_picture
             }, room=room)
         else:
-            print(f"Sender or receiver not found: {sender_email}, {receiver_email}")
+            app.logger.warning(f"Sender or receiver not found: {sender_email}, {receiver_email}")
     except SQLAlchemyError as e:
         db.session.rollback()
-        print(f"Error handling message: {e}")
+        app.logger.error(f"Error handling message: {e}")
 
 
 @socketio.on('join')
@@ -51,4 +52,4 @@ def on_join(data):
     if receiver:
         room = '_'.join(sorted([email, receiver]))
         join_room(room)
-        print(f"User {email} joined room {room}")
+        app.logger.info(f"User {email} joined room {room}")
