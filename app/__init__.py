@@ -19,6 +19,7 @@ from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
 from app.supply_chain.routes import bp as supply_chain_bp
 from app.volunteers.routes import bp as volunteers_bp
+from app.notifications.routes import bp as notifications_bp
 from config import config
 
 # Create logs directory if it doesn't exist
@@ -76,6 +77,8 @@ def create_app(config_name=None):
     flask_app.register_blueprint(maps_bp, url_prefix='/maps')
 
     flask_app.register_blueprint(supply_chain_bp, url_prefix='/supply-chain')
+
+    flask_app.register_blueprint(notifications_bp, url_prefix='/notifications')
 
     @flask_app.route('/set_language', methods=['POST'])
     @csrf.exempt

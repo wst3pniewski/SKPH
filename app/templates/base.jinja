@@ -42,12 +42,14 @@
             </li>
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('chat.chat') }}">{{ _("Chat")}}
-
+              <a class="nav-link" href="{{ url_for('chat.chat') }}">
+                {{ _("Chat")}}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('maps.index') }}">{{ _("Maps")}}</a>
+              <a class="nav-link" href="{{ url_for('maps.index') }}">
+                {{ _("Maps")}}
+              </a>
             </li>
             {% endif %}
           </ul>
@@ -95,13 +97,12 @@
               <a class="dropdown-item" href="{{ url_for('auth.logout') }}">{{ _("Logout") }}</a>
             </div>
           </div>
-          <button type="button" class="btn btn-primary position-relative" data-bs-toggle="offcanvas"
+          <button type="button" class="btn btn-outline-info position-relative" data-bs-toggle="offcanvas"
             data-bs-target="#offcanvasNotifications" aria-controls="offcanvasNotifications">
             <i class="fa-regular fa-bell"></i>
             <span id="notification-dot"
               class="position-absolute top-0 start-100 translate-middle p-2 bg-danger rounded-circle"
               style="display: none;">
-              {# <span class="visually-hidden">New alerts</span> #}
             </span>
           </button>
           {% else %}
@@ -139,11 +140,17 @@
       aria-labelledby="offcanvasNotificationsLabel">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasNotificationsLabel">{{ _("Notifications") }}</h5>
+        <button type="button" class="btn btn-outline-secondary ms-2" id="mark-all-read-btn">
+          {{ _("Mark All as Read") }}
+        </button>
+        <button type="button" class="btn btn-outline-primary ms-auto" id="fetch-notifications-btn">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
         <ul id="notification-list" class="list-group">
-          <!-- Existing notifications will be appended here -->
+          <li class="">XD</li>
         </ul>
       </div>
     </div>
@@ -200,7 +207,6 @@
       const themeIcon = document.getElementById('theme-icon');
       const htmlElement = document.documentElement;
 
-      // Set the initial icon state based on the current theme
       if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
         themeIcon.classList.remove('fa-moon');
         themeIcon.classList.add('fa-sun');
@@ -228,40 +234,87 @@
           }
         });
       });
-    });
 
-    var currentUserEmail = "{{ current_user.email }}" || "user@skph.com";
-
-    var socket = io();
-
-    socket.on('connect', function () {
-      socket.emit('request_user_email');
-    });
-
-    socket.on('request_user_email', function () {
-      socket.emit('join_room', currentUserEmail);
-    });
-
-    socket.on('new_message', function (data) {
-      console.log('There is a new message!!');
-      if (data.receiver === currentUserEmail) {
-        var notificationDot = document.getElementById("notification-dot");
-        notificationDot.style.display = "block";
-
-        var notificationList = document.getElementById("notification-list");
-        var newNotification = document.createElement("li");
-        newNotification.className = "list-group-item";
-        newNotification.innerHTML = `New Message: <strong>${data.sender}</strong>: ${data.timestamp}`;
-        notificationList.appendChild(newNotification);
+      function fetchNotifications() {
+        fetch('{{ url_for("notifications.get_unread_notifications") }}')
+          .then(response => response.json())
+          .then(data => {
+            const notificationList = document.getElementById("notification-list");
+            notificationList.innerHTML = '';
+            if (data.length > 0) {
+              data.forEach(notification => {
+                const newNotification = document.createElement("li");
+                newNotification.className = "list-group-item";
+                newNotification.innerHTML = `${notification.message} <small>${notification.timestamp}</small>`;
+                notificationList.appendChild(newNotification);
+              });
+              document.getElementById("notification-dot").style.display = "block";
+            } else {
+              const noNotificationsMessage = document.createElement("li");
+              noNotificationsMessage.className = "list-group-item";
+              noNotificationsMessage.innerText = "{{ _('No notifications available') }}";
+              notificationList.appendChild(noNotificationsMessage);
+              document.getElementById("notification-dot").style.display = "none";
+            }
+          });
       }
-    });
 
-    // Optionally, if the user clicks the Chat menu, hide the notification dot.
-    /* document.getElementById("menu").addEventListener("click", function() {
-       document.getElementById("notification-dot").style.display = "none";
-     });*/
+      function markAllAsRead() {
+        fetch('{{ url_for("notifications.get_unread_notifications") }}')
+          .then(response => response.json())
+          .then(data => {
+            data.forEach(notification => {
+              const markAsReadUrlBase = "/notifications/mark_as_read/";
+
+              fetch(markAsReadUrlBase + notification.id, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                }
+              });
+            });
+
+            // Immediately update the UI
+            document.getElementById("notification-list").innerHTML = '';
+            document.getElementById("notification-dot").style.display = "none";
+          });
+      }
+
+      document.getElementById('fetch-notifications-btn').addEventListener('click', fetchNotifications);
+      document.getElementById('mark-all-read-btn').addEventListener('click', markAllAsRead);
+
+      fetchNotifications();
+
+      setInterval(fetchNotifications, 10000);
+    });
   </script>
   {% block ascript %}{% endblock %}
 </body>
+{# var currentUserEmail = "{{ current_user.email }}" || "user@skph.com";
+
+var socket = io();
+
+socket.on('connect', function () {
+socket.emit('request_user_email');
+});
+
+socket.on('request_user_email', function () {
+socket.emit('join_room', currentUserEmail);
+});
+
+socket.on('new_message', function (data) {
+console.log('There is a new message!!');
+if (data.receiver === currentUserEmail) {
+var notificationDot = document.getElementById("notification-dot");
+notificationDot.style.display = "block";
+
+var notificationList = document.getElementById("notification-list");
+var newNotification = document.createElement("li");
+newNotification.className = "list-group-item";
+newNotification.innerHTML = `New Message: <strong>${data.sender}</strong>: ${data.timestamp}`;
+notificationList.appendChild(newNotification);
+}
+}); #}
 
 </html>
