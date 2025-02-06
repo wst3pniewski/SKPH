@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-02-06 12:12+0100\n"
+"POT-Creation-Date: 2025-02-06 14:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,22 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
-
-#: app/affected/routes.py:129
-msgid "Food"
-msgstr ""
-
-#: app/affected/routes.py:129
-msgid "Clothes"
-msgstr ""
-
-#: app/affected/routes.py:129
-msgid "Shelter"
-msgstr ""
-
-#: app/affected/routes.py:129
-msgid "Medical Supplies"
-msgstr ""
 
 #: app/auth/routes.py:56
 msgid "Admin user created if it did not exist already."
@@ -201,51 +185,51 @@ msgstr ""
 msgid "Crisis Management System"
 msgstr ""
 
-#: app/templates/base.jinja:35
+#: app/templates/base.jinja:37
 msgid "Home"
 msgstr ""
 
-#: app/templates/base.jinja:38
+#: app/templates/base.jinja:40
 #: app/templates/organization/list_charity_campaigns.jinja:15
 msgid "Campaigns"
 msgstr ""
 
-#: app/templates/auth/manage_users.jinja:54 app/templates/base.jinja:41
+#: app/templates/auth/manage_users.jinja:54 app/templates/base.jinja:43
 #: app/templates/organization/list_organizations.jinja:3
 #: app/templates/organization/list_organizations.jinja:7
 msgid "Organizations"
 msgstr ""
 
-#: app/templates/base.jinja:46 app/templates/communication/chat.jinja:3
+#: app/templates/base.jinja:48 app/templates/communication/chat.jinja:3
 msgid "Chat"
 msgstr ""
 
-#: app/templates/base.jinja:51
+#: app/templates/base.jinja:53
 msgid "Maps"
 msgstr ""
 
-#: app/templates/base.jinja:60
+#: app/templates/base.jinja:62
 msgid "Language"
 msgstr ""
 
-#: app/templates/base.jinja:91 app/templates/profile.jinja:3
+#: app/templates/base.jinja:93 app/templates/profile.jinja:3
 msgid "Profile"
 msgstr ""
 
-#: app/templates/base.jinja:94
+#: app/templates/base.jinja:96
 msgid "Dashboard"
 msgstr ""
 
-#: app/templates/base.jinja:97
+#: app/templates/base.jinja:99
 msgid "Logout"
 msgstr ""
 
 #: app/templates/auth/login.jinja:3 app/templates/auth/login.jinja:7
-#: app/templates/base.jinja:110
+#: app/templates/base.jinja:112
 msgid "Login"
 msgstr ""
 
-#: app/templates/affected/all.jinja:8 app/templates/base.jinja:134
+#: app/templates/affected/all.jinja:8 app/templates/base.jinja:136
 #: app/templates/donors/donor_view.jinja:8
 #: app/templates/supply_chain/all_resources.jinja:7
 #: app/templates/supply_chain/manage_request.jinja:9
@@ -254,23 +238,27 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: app/templates/base.jinja:142
+#: app/templates/base.jinja:144
 msgid "Notifications"
 msgstr ""
 
-#: app/templates/base.jinja:144
+#: app/templates/base.jinja:146
 msgid "Mark All as Read"
 msgstr ""
 
-#: app/templates/base.jinja:255
+#: app/templates/base.jinja:257
 msgid "New message from"
 msgstr ""
 
-#: app/templates/base.jinja:257
-msgid "New donation from"
+#: app/templates/base.jinja:259
+msgid "New donation"
 msgstr ""
 
-#: app/templates/base.jinja:267
+#: app/templates/base.jinja:261
+msgid "New request"
+msgstr ""
+
+#: app/templates/base.jinja:271
 msgid "No notifications available"
 msgstr ""
 
@@ -466,7 +454,7 @@ msgstr ""
 msgid "Your Profile"
 msgstr ""
 
-#: app/templates/profile.jinja:23 app/templates/profile.jinja:119
+#: app/templates/profile.jinja:23 app/templates/profile.jinja:95
 msgid "Edit Photo"
 msgstr ""
 
@@ -474,55 +462,61 @@ msgstr ""
 msgid "Delete Photo"
 msgstr ""
 
+#: app/templates/affected/affected_details.jinja:12
+#: app/templates/profile.jinja:44
+msgid "Personal Information"
+msgstr ""
+
+#: app/templates/affected/affected_auth_details.jinja:93
+#: app/templates/profile.jinja:45
+msgid "Edit"
+msgstr ""
+
 #: app/templates/auth/approve_organizations.jinja:14
 #: app/templates/auth/register.jinja:15
 #: app/templates/donors/donor_view.jinja:19
 #: app/templates/organization/list_volunteers.jinja:13
 #: app/templates/organization/manage_volunteers.jinja:13
-#: app/templates/profile.jinja:52 app/templates/volunteers/view.jinja:18
+#: app/templates/profile.jinja:51 app/templates/volunteers/view.jinja:18
 msgid "Email"
 msgstr ""
 
-#: app/templates/profile.jinja:65
+#: app/templates/profile.jinja:64
 msgid "Security Status"
 msgstr ""
 
-#: app/templates/profile.jinja:69
+#: app/templates/profile.jinja:68
 msgid "2FA Enabled"
 msgstr ""
 
-#: app/templates/profile.jinja:71
+#: app/templates/profile.jinja:70
 msgid "2FA Not Enabled"
 msgstr ""
 
-#: app/templates/profile.jinja:75
+#: app/templates/profile.jinja:74
 msgid "Setup 2FA"
 msgstr ""
 
-#: app/templates/auth/remove_totp.jinja:17 app/templates/profile.jinja:78
+#: app/templates/auth/remove_totp.jinja:17 app/templates/profile.jinja:77
 msgid "Remove 2FA"
 msgstr ""
 
-#: app/templates/profile.jinja:87
+#: app/templates/profile.jinja:82
 msgid "Enhance your account security by enabling two-factor authentication"
 msgstr ""
 
-#: app/templates/profile.jinja:101
-msgid "Edit Profile"
-msgstr ""
-
 #: app/templates/auth/setup_profile_picture.jinja:19
-#: app/templates/profile.jinja:126
+#: app/templates/profile.jinja:102
 msgid "Choose a profile picture"
 msgstr ""
 
 #: app/templates/auth/setup_profile_picture.jinja:22
-#: app/templates/profile.jinja:129
+#: app/templates/profile.jinja:105
 msgid "Save"
 msgstr ""
 
 #: app/templates/auth/setup_profile_picture.jinja:23
-#: app/templates/profile.jinja:130
+#: app/templates/profile.jinja:106
 msgid "Discard"
 msgstr ""
 
@@ -752,10 +746,6 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: app/templates/affected/affected_auth_details.jinja:93
-msgid "Edit"
-msgstr ""
-
 #: app/templates/affected/affected_auth_details.jinja:96
 msgid ""
 " Are you sure you want to delete\n"
@@ -777,10 +767,6 @@ msgstr ""
 
 #: app/templates/affected/affected_details.jinja:3
 msgid "Affected Details"
-msgstr ""
-
-#: app/templates/affected/affected_details.jinja:12
-msgid "Personal Information"
 msgstr ""
 
 #: app/templates/affected/affected_details.jinja:16
@@ -1411,7 +1397,8 @@ msgstr ""
 
 #: app/templates/organization/list_organization_charity_campaigns.jinja:51
 #: app/templates/organization/list_organization_charity_campaigns.jinja:92
-#: app/templates/reports/view.jinja:3 app/templates/reports/view.jinja:11
+#: app/templates/reports/plotly_view.jinja:3 app/templates/reports/view.jinja:3
+#: app/templates/reports/view.jinja:11
 msgid "Reports"
 msgstr ""
 
