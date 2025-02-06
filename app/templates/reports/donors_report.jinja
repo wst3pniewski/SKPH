@@ -1,0 +1,85 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Reports Donors") }}{% endblock %}
+
+{% block content %}
+<div class="container mb-3">
+    <h2 class="mb-4">{{ _("Donations Types Statistics") }}</h2>
+    <div>{{ donations_types_html | safe }}</div>
+    <div class="mb-3" id="donations-types-chart"></div>
+    <hr>
+    <h2 class="mb-4">{{ _("Money Donations Statistics") }}</h2>
+    <div>{{ donations_money_stats_html | safe }}</div>
+    <div>{{ donations_money_html | safe }}</div>
+    <div class="mb-3" id="donations-money-chart"></div>
+    <hr>
+    <h2 class="mb-4">{{ _("Item Donations Statistics") }}</h2>
+    <div>{{ donations_item_html | safe }}</div>
+    <div class="mb-3" id="donations-item-chart"></div>
+    <hr>
+    <h2 class="mb-4">{{ _("All Donations") }}</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <h4>{{ _("Item Donations") }}</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Count") }}</th>
+                        <th>{{ _("Description") }}</th>
+                        <th>{{ _("Donor's Last Name") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in donations_item %}
+                    <tr>
+                        <td>{{ donation.donation_type.type }}</td>
+                        <td>{{ donation.amount }}</td>
+                        <td>{{ donation.description }}</td>
+                        <td>{{ donation.donor.last_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h4>{{ _("Money Donations") }}</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Amount") }}</th>
+                        <th>{{ _("Description") }}</th>
+                        <th>{{ _("Donor's Last Name") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in donations_money %}
+                    <tr>
+                        <td>{{ donation.donation_type.type }}</td>
+                        <td>{{ donation.cashAmount }}</td>
+                        <td>{{ donation.description }}</td>
+                        <td>{{ donation.donor.last_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block ascript %}
+
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+<script>
+    var donations_types_chart = {{ donations_types_chart_json  | safe }};
+    var donations_money_chart = {{ donations_money_chart_json | safe }};
+    var donations_item_chart = {{ donations_item_chart_json | safe }};
+    //var tasks_status_chart = {{ tasks_status_chart_json | safe }}
+    Plotly.newPlot('donations-types-chart', donations_types_chart);
+    Plotly.newPlot('donations-money-chart', donations_money_chart);
+    Plotly.newPlot('donations-item-chart', donations_item_chart);
+    //Plotly.newPlot('tasks-status-chart', tasks_status_chart)
+</script>
+{% endblock %}

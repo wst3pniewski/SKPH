@@ -1,0 +1,33 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Donor Report") }}{% endblock %}
+
+{% block content %}
+<div class="container mb-3">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>{{ _("Donor Information") }}</h2>
+            <p><strong>{{ _("Name") }}:</strong> {{ donor.first_name }} {{ donor.last_name }}</p>
+            <p><strong>{{ _("Email") }}:</strong> {{ donor.email }}</p>
+            <p><strong>{{ _("Phone Number") }}:</strong> {{ donor.phone_number }}</p>
+        </div>
+        <div class="col-md-6">
+            <h2>{{ _("Donation Statistics") }}</h2>
+            <p><strong>{{ _("Total Donations") }}:</strong> {{ all_donations_count }}</p>
+            <p><strong>{{ _("Total Money Donated") }}:</strong> {{ donations_money_sum }}</p>
+        </div>
+    </div>
+    <hr>
+    <h2 class="my-3">{{ _("Donations by Type") }}</h2>
+    <div>{{ df_donations_item.to_html(justify='left', index=False, classes='table table-bordered') | safe }}</div>
+    <div class="mb-3" id="donations-type-chart"></div>
+</div>
+{% endblock %}
+
+{% block ascript %}
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+<script>
+    var donations_type_chart = {{ donations_type_chart_json | safe }};
+    Plotly.newPlot('donations-type-chart', donations_type_chart);
+</script>
+{% endblock %}

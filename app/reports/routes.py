@@ -3,8 +3,10 @@ import io
 import json
 
 import pandas as pd
-import plotly.graph_objs as go
-from flask import Blueprint, Response, render_template, request
+import plotly.express as px
+from flask import (Blueprint, Response, current_app, has_request_context,
+                   render_template, request, session)
+from flask_babel import lazy_gettext as _l
 from flask_login import login_required
 from plotly.utils import PlotlyJSONEncoder
 
@@ -12,102 +14,132 @@ from app.auth.user_service import roles_required
 from app.extensions import db
 from app.models.address import Address
 from app.models.affected import Affected
-from app.models.charity_campaign import OrganizationCharityCampaign
+from app.models.charity_campaign import CharityCampaign, OrganizationCharityCampaign
+from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
+from app.models.item_stock import ItemStock
+from app.models.request import Request
 from app.models.task import Task
 from app.models.volunteer import Volunteer
 
-from .chart_utils import create_bar_chart_base64
 from .report_service import ReportService
 
-bp = Blueprint("reports", __name__, template_folder="templates/reports", static_folder="../static/reports")
+bp = Blueprint("reports", __name__,
+               template_folder="../templates/reports",
+               static_folder="../static/reports")
 report_service = ReportService()
 
 
-@bp.route('/ui', methods=['GET'])
+def get_theme() -> str:
+    try:
+        if not has_request_context():
+            return 'plotly'
+        theme = session.get('theme', 'light')
+        return 'plotly_white' if theme == 'light' else 'plotly_dark'
+    except Exception as e:
+        current_app.logger.error(f"Error getting theme: {e}")
+        return 'plotly'
+
+
+@bp.route('/')
 @login_required
 def ui():
-    return render_template('reports/reports_ui.jinja')
+    return render_template('reports.jinja')
 
 
 # =================== RAPORT AFFECTED ===================
-@bp.route('/affected-report', methods=['GET'])
-@login_required
-@roles_required(['authorities', 'organization', 'admin'])
+@bp.route('/affected-report')
+@roles_required(['authorities', 'organization'])
 def affected_report():
-    affected_list = db.session.query(Affected).all()
+    campaign_id = request.args.get('campaign_id', type=int)
+    if not campaign_id:
+        message = _l('Please specify campaign id!')
+        return f'<h3>{message}</h3>', 400
 
-    city_stats = report_service.stats_by_city()
-    voiv_stats = report_service.stats_by_voivodeship()
-    needs_stats = report_service.stats_by_needs()
+    campaign = OrganizationCharityCampaign.query.get(campaign_id)
+    if not campaign:
+        message = _l('There is no campaign with specified id!')
+        return f'<h3>{message}</h3>', 400
 
-    city_chart_b64 = create_bar_chart_base64(city_stats, "Affected wg Miasta")
-    voiv_chart_b64 = create_bar_chart_base64(voiv_stats, "Affected wg Województwa")
-    needs_chart_b64 = create_bar_chart_base64(needs_stats, "Affected wg Needs")
+    theme = get_theme()
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <title>Raport Affected</title>
-      <link rel="stylesheet" type="text/css" href="../../static/style.css">
-    </head>
-    <body class="bg-light">
-      <div class="container mt-5">
-        <h1 class="text-primary text-center">Raport Affected</h1>
+    city_stats = db.session.query(
+        Address.city, db.func.count(Affected.id)
+    ).join(Affected).group_by(Address.city).all()
 
-        <h2>Wykresy</h2>
-        <div>
-          <img src="data:image/png;base64,{city_chart_b64}" alt="Affected by city"/>
-          <img src="data:image/png;base64,{voiv_chart_b64}" alt="Affected by voiv"/>
-          <img src="data:image/png;base64,{needs_chart_b64}" alt="Affected by needs"/>
-        </div>
+    cities = [city[0] for city in city_stats]
+    cities_counts = [city[1] for city in city_stats]
+    df_city_stats = pd.DataFrame({'city': cities, 'affected_count': cities_counts})
 
-        <h2>Szczegóły</h2>
-    """
+    requests_stats = db.session.query(
+        Affected.id, db.func.count(Request.id)
+    ).join(Request, Affected.id == Request.affected_id).filter(
+        Request.charity_campaign_id == campaign_id).group_by(Affected.id).all()
 
-    for aff in affected_list:
-        city = aff.address.city if aff.address else ""
-        voiv = aff.address.voivodeship if aff.address else ""
+    requests_affected_id = [str(tasks[0]) for tasks in requests_stats]
+    requests_count = [tasks[1] for tasks in requests_stats]
+    df_requests_count = pd.DataFrame({
+        'affected_id': pd.Series(requests_affected_id, dtype='object'),
+        'requests_count': requests_count
+    })
 
-        html += f"""
-        <div class="border p-3 mb-3 bg-white">
-          <h3>Affected ID={aff.id}: {aff.first_name} {aff.last_name}</h3>
-          <p>Needs: {aff.needs or ""}</p>
-          <p>Adres: {city}, {voiv}</p>
-        """
+    requests_status_stats = db.session.query(
+        Request.status, db.func.count(Request.id)
+    ).join(Affected).filter(Request.charity_campaign_id == campaign_id).group_by(Request.status).all()
 
-        req_list = aff.requests
-        if req_list:
-            html += "<h4>Requesty:</h4><ul>"
-            for r in req_list:
-                donation_type_str = getattr(r, "donation_type", "N/A")
-                req_city = r.address.city if r.address else ""
-                req_voiv = r.address.voivodeship if r.address else ""
-                html += (f"<li>ReqID={r.id}, name={r.name}, status={r.status.value},"
-                         f" type={donation_type_str}, amount={r.amount}, address=({req_city},{req_voiv})</li>")
-            html += "</ul>"
-        else:
-            html += "<p>Brak requestów.</p>"
+    statuses = [str(status[0].value) for status in requests_status_stats]
+    statuses_counts = [status[1] for status in requests_status_stats]
+    df_requests_status_stats = pd.DataFrame({'status': statuses, 'requests_count': statuses_counts})
 
-        html += "</div>"
+    requests_donation_type_stats = db.session.query(
+        DonationType.type, db.func.count(Request.id)
+    ).join(Request, DonationType.id == Request.donation_type_id).filter(
+        Request.charity_campaign_id == campaign_id).group_by(DonationType.type).all()
 
-    html += """
-        <div class="mt-4">
-          <a href="/reports/affected-report-csv" class="btn btn-success">Pobierz CSV</a>
-          <a href="/reports/ui" class="btn btn-secondary">Powrót</a>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return html
+    donation_types = [donation_type[0] for donation_type in requests_donation_type_stats]
+    donation_types_counts = [donation_type[1] for donation_type in requests_donation_type_stats]
+    df_requests_donation_type_stats = pd.DataFrame({'request_type': donation_types, 'requests_count': donation_types_counts})
+
+    voiv_stats = db.session.query(
+        Address.voivodeship, db.func.count(Affected.id)
+    ).join(Affected).group_by(Address.voivodeship).all()
+
+    voivodeships = [voiv[0] for voiv in voiv_stats]
+    voivodeships_counts = [voiv[1] for voiv in voiv_stats]
+    df_voiv_stats = pd.DataFrame({'voivodeship': voivodeships, 'affected_count': voivodeships_counts})
+
+    city_chart = px.bar(df_city_stats, x='city', y='affected_count', title='Affected by city', color='city', template=theme)
+    requests_chart = px.bar(df_requests_count, x='affected_id', y='requests_count', title='Requests by affected', color='affected_id', template=theme)
+    requests_status_chart = px.bar(df_requests_status_stats, x='status', y='requests_count', title='Requests by Status', color='status', template=theme)
+    requests_donation_type_chart = px.bar(df_requests_donation_type_stats, x='request_type', y='requests_count', title='Requests by Type', color='request_type', template=theme)
+    voiv_chart = px.bar(df_voiv_stats, x='voivodeship', y='affected_count', title='Affected by voivodeship', color='voivodeship', template=theme)
+
+    city_chart_json = json.dumps(city_chart, cls=PlotlyJSONEncoder)
+    requests_chart_json = json.dumps(requests_chart, cls=PlotlyJSONEncoder)
+    requests_status_chart_json = json.dumps(requests_status_chart, cls=PlotlyJSONEncoder)
+    requests_donation_type_chart_json = json.dumps(requests_donation_type_chart, cls=PlotlyJSONEncoder)
+    voiv_chart_json = json.dumps(voiv_chart, cls=PlotlyJSONEncoder)
+    city_stats_html = df_city_stats.to_html(justify='left', index=False, classes='table table-bordered')
+    requests_stats_html = df_requests_count.to_html(justify='left', index=False, classes='table table-bordered')
+    requests_status_stats_html = df_requests_status_stats.to_html(justify='left', index=False, classes='table table-bordered')
+    requests_donation_type_stats_html = df_requests_donation_type_stats.to_html(justify='left', index=False, classes='table table-bordered')
+    voiv_stats_html = df_voiv_stats.to_html(justify='left', index=False, classes='table table-bordered')
+    return render_template('affected_report.jinja',
+                           campaign=campaign,
+                           city_stats_html=city_stats_html,
+                           requests_stats_html=requests_stats_html,
+                           requests_status_stats_html=requests_status_stats_html,
+                           requests_donation_type_stats_html=requests_donation_type_stats_html,
+                           city_chart_json=city_chart_json,
+                           requests_chart_json=requests_chart_json,
+                           requests_status_chart_json=requests_status_chart_json,
+                           requests_donation_type_chart_json=requests_donation_type_chart_json,
+                           voiv_stats_html=voiv_stats_html,
+                           voiv_chart_json=voiv_chart_json)
 
 
-@bp.route('/affected-report-csv', methods=['GET'])
-@login_required
-@roles_required(['authorities', 'organization', 'admin'])
+@bp.route('/affected-report-csv')
+@roles_required(['authorities', 'organization'])
 def affected_report_csv():
     affected_list = db.session.query(Affected).all()
     output = io.StringIO()
@@ -127,71 +159,72 @@ def affected_report_csv():
     return Response(csv_data, mimetype="text/csv",
                     headers={"Content-disposition": "attachment; filename=affected_report.csv"})
 
-
 # =================== RAPORT VOLUNTEER ===================
-@bp.route('/volunteer-report', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
+
+
+@bp.route('/volunteer-report')
+@roles_required(['organization', 'authorities'])
 def volunteer_report():
-    volunteer_list = report_service.get_all_volunteers()
-    city_stats = report_service.stats_by_city_volunteer()
-    tasks_stats = report_service.stats_volunteer_task_count()
+    campaign_id = request.args.get('campaign_id', type=int)
+    if not campaign_id:
+        message = _l('Please specify campaign id!')
+        return f'<h3>{message}</h3>', 400
 
-    city_chart_b64 = create_bar_chart_base64(city_stats, "Volunteer wg Miasta")
-    tasks_chart_b64 = create_bar_chart_base64(tasks_stats, "Volunteer wg liczby zadań")
+    campaign = OrganizationCharityCampaign.query.get(campaign_id)
+    if not campaign:
+        message = _l('There is no camapign with specified id!')
+        return f'<h3>{message}</h3>', 400
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <title>Raport Volunteer</title>
-      <link rel="stylesheet" type="text/css" href="../../static/style.css">
-    </head>
-    <body class="bg-light">
-      <div class="container mt-5">
-        <h1 class="text-primary text-center">Raport Volunteer</h1>
+    theme = get_theme()
 
-        <h2>1. Wykresy</h2>
-        <div class="mb-4">
-          <img src="data:image/png;base64,{city_chart_b64}" alt="Volunteer by city"/>
-          <img src="data:image/png;base64,{tasks_chart_b64}" alt="Volunteer tasks count"/>
-        </div>
+    city_stats = db.session.query(
+        Address.city, db.func.count(Volunteer.id)
+    ).join(Volunteer).join(Volunteer.campaigns).filter(OrganizationCharityCampaign.id == campaign_id).group_by(Address.city).all()
 
-        <h2>2. Lista Volunteer</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>ID</th><th>Imię</th><th>Nazwisko</th><th>Miasto/Woj.</th><th>Liczba zadań</th></tr>
-          </thead>
-          <tbody>
-    """
+    cities = [city[0] for city in city_stats]
+    cities_counts = [city[1] for city in city_stats]
+    df_city_stats = pd.DataFrame({'city': cities, 'volunteers_count': cities_counts})
 
-    for vol in volunteer_list:
-        city = vol.address.city if vol.address else ""
-        voiv = vol.address.voivodeship if vol.address else ""
-        tcount = len(vol.tasks)
-        html += f"""
-            <tr>
-              <td>{vol.id}</td>
-              <td>{vol.first_name}</td>
-              <td>{vol.last_name}</td>
-              <td>{city}/{voiv}</td>
-              <td>{tcount}</td>
-            </tr>
-        """
+    tasks_stats = db.session.query(
+        Volunteer.id, db.func.count(Task.id)
+    ).join(Task, Volunteer.id == Task.volunteer_id).join(
+        Volunteer.campaigns).filter(
+            OrganizationCharityCampaign.id == campaign_id).group_by(Volunteer.id).all()
 
-    html += """
-          </tbody>
-        </table>
-        <div class="mt-4">
-          <a href="/reports/volunteer-report-csv" class="btn btn-success">Pobierz CSV</a>
-          <a href="/reports/ui" class="btn btn-secondary">Powrót</a>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return html
+    tasks_volunteer_id = [tasks[0] for tasks in tasks_stats]
+    tasks_count = [tasks[1] for tasks in tasks_stats]
+    df_tasks_count = pd.DataFrame({
+        'volunteer_id': pd.Series(tasks_volunteer_id, dtype='object'),
+        'tasks_count': tasks_count
+    })
+
+    tasks_status_stats = db.session.query(
+        Task.status, db.func.count(Task.id)
+    ).join(Volunteer).join(
+        Volunteer.campaigns).filter(
+            OrganizationCharityCampaign.id == campaign_id).group_by(Task.status).all()
+
+    statuses = [status[0] for status in tasks_status_stats]
+    statuses_counts = [status[1] for status in tasks_status_stats]
+    df_tasks_status_stats = pd.DataFrame({'status': statuses, 'tasks_count': statuses_counts})
+
+    city_chart = px.bar(df_city_stats, x='city', y='volunteers_count', title='Volunteers by city', color='city', template=theme)
+    tasks_chart = px.bar(df_tasks_count, x='volunteer_id', y='tasks_count', title='Tasks by volunteers', color='volunteer_id', template=theme)
+    tasks_status_chart = px.bar(df_tasks_status_stats, x='status', y='tasks_count', title='Tasks by Status', color='status', template=theme)  # New line
+
+    city_chart_json = json.dumps(city_chart, cls=PlotlyJSONEncoder)
+    tasks_chart_json = json.dumps(tasks_chart, cls=PlotlyJSONEncoder)
+    tasks_status_chart_json = json.dumps(tasks_status_chart, cls=PlotlyJSONEncoder)  # New line
+    city_stats_html = df_city_stats.to_html(justify='left', index=False, classes='table table-bordered')
+    tasks_stats_html = df_tasks_count.to_html(justify='left', index=False, classes='table table-bordered')
+    tasks_status_stats_html = df_tasks_status_stats.to_html(justify='left', index=False, classes='table table-bordered')  # New line
+    return render_template('volunteers_report.jinja',
+                           city_stats_html=city_stats_html,
+                           tasks_stats_html=tasks_stats_html,
+                           tasks_status_stats_html=tasks_status_stats_html,
+                           city_chart_json=city_chart_json,
+                           tasks_chart_json=tasks_chart_json,
+                           tasks_status_chart_json=tasks_status_chart_json)
 
 
 @bp.route('/volunteer-report-csv', methods=['GET'])
@@ -213,123 +246,101 @@ def volunteer_report_csv():
     output.close()
     return Response(csv_data, mimetype="text/csv",
                     headers={"Content-disposition": "attachment; filename=volunteer_report.csv"})
-
-
-@bp.route('/volunteer-report-plotly', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
-def volunteer_report_plotly():
-    city_stats = db.session.query(
-        Address.city, db.func.count(Volunteer.id)
-    ).join(Volunteer).group_by(Address.city).all()
-    print(city_stats)
-    df_city_stats = pd.DataFrame(city_stats)
-    print(df_city_stats)
-    tasks_stats = db.session.query(
-        Volunteer.id, db.func.count(Task.id)
-    ).join(Task).group_by(Volunteer.id).all()
-
-    city_chart = go.Figure(data=[
-        go.Bar(x=[stat[0] for stat in city_stats], y=[stat[1] for stat in city_stats])
-    ])
-    city_chart.update_layout(title="Volunteer wg Miasta", template="plotly_dark")
-
-    tasks_chart = go.Figure(data=[
-        go.Bar(x=[stat[0] for stat in tasks_stats], y=[stat[1] for stat in tasks_stats])
-    ])
-    tasks_chart.update_layout(title="Volunteer wg liczby zadań", template="plotly_dark")
-
-    city_chart_json = json.dumps(city_chart, cls=PlotlyJSONEncoder)
-    tasks_chart_json = json.dumps(tasks_chart, cls=PlotlyJSONEncoder)
-
-    return render_template('reports/plotly_view.jinja', city_chart_json=city_chart_json, tasks_chart_json=tasks_chart_json)
-
-
 # =================== RAPORT DONOR ===================
-@bp.route('/donor-report', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
-def donor_report():
-    donors = report_service.get_all_donors()
 
-    type_count_stats = report_service.stats_donation_type_count()
-    sums_stats = report_service.stats_donation_sums()
 
-    items_by_type_stats = report_service.stats_donation_items_by_type()
-    money_by_campaign_stats = report_service.stats_donation_money_by_campaign()
+@bp.route('/donors-report')
+@roles_required(['organization', 'authorities'])
+def donors_report():
+    campaign_id = request.args.get('campaign_id', type=int)
+    if not campaign_id:
+        message = _l('Please specify campaign id!')
+        return f'<h3>{message}</h3>', 400
 
-    type_chart_b64 = create_bar_chart_base64(type_count_stats, "Donations: Money vs. Items")
-    sums_chart_b64 = create_bar_chart_base64(sums_stats, "Total sums: cashAmount vs. item amount")
-    items_by_type_chart_b64 = create_bar_chart_base64(items_by_type_stats, "DonationItems by Type (sum of amounts)")
-    money_by_campaign_chart_b64 = create_bar_chart_base64(money_by_campaign_stats, "DonationMoney by Campaign (sum)")
+    campaign = OrganizationCharityCampaign.query.get(campaign_id)
+    if not campaign:
+        message = _l('There is no campaign with specified id!')
+        return f'<h3>{message}</h3>', 400
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <title>Raport Donor</title>
-      <link rel="stylesheet" type="text/css" href="../../static/style.css">
-    </head>
-    <body class="bg-light">
-      <div class="container mt-5">
-        <h1 class="text-primary text-center">Raport Donor</h1>
+    theme = get_theme()
 
-        <h2>1. Podstawowe statystyki</h2>
-        <div>
-          <img src="data:image/png;base64,{type_chart_b64}" alt="Money vs. Items"/>
-          <img src="data:image/png;base64,{sums_chart_b64}" alt="Sum Money vs. Items"/>
-        </div>
+    donation_money_count_stats = DonationMoney.query.filter(
+        DonationMoney.charity_campaign_id == campaign_id).count()
 
-        <h2>2. Dodatkowe statystyki</h2>
-        <div>
-          <img src="data:image/png;base64,{items_by_type_chart_b64}" alt="Items by Type"/>
-          <img src="data:image/png;base64,{money_by_campaign_chart_b64}" alt="Money by Campaign"/>
-        </div>
+    donation_item_count_stats = DonationItem.query.filter(
+        DonationItem.charity_campaign_id == campaign_id).count()
 
-        <h2>3. Lista Donorów</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Imię</th>
-              <th>Nazwisko</th>
-              <th>Email</th>
-              <th>Telefon</th>
-              <th>#money</th>
-              <th>#items</th>
-            </tr>
-          </thead>
-          <tbody>
-    """
+    df_donations_types = pd.DataFrame({
+        'donation_type': ['money', 'item'],
+        'count': [donation_money_count_stats, donation_item_count_stats]
+    })
 
-    for d in donors:
-        mcount = len(d.donations_money)
-        icount = len(d.donations_items)
-        html += f"""
-            <tr>
-              <td>{d.donor_id}</td>
-              <td>{d.first_name}</td>
-              <td>{d.last_name}</td>
-              <td>{d.email}</td>
-              <td>{d.phone_number}</td>
-              <td>{mcount}</td>
-              <td>{icount}</td>
-            </tr>
-        """
+    donations_money = DonationMoney.query.filter(
+        DonationMoney.charity_campaign_id == campaign_id).all()
 
-    html += """
-          </tbody>
-        </table>
-        <div class="mt-4">
-          <a href="/reports/donor-report-csv" class="btn btn-success">Pobierz CSV</a>
-          <a href="/reports/ui" class="btn btn-secondary">Powrót</a>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return html
+    donations_item_all = DonationItem.query.filter(
+        DonationItem.charity_campaign_id == campaign_id).all()
+
+    donations_id = [donation.donationMoney_id for donation in donations_money]
+    donations_amount = [donation.cashAmount for donation in donations_money]
+
+    df_donations_money = pd.DataFrame({
+        'donation_id': donations_id,
+        'amount': donations_amount
+    })
+
+    df_donations_money_stats = df_donations_money.describe(exclude=[int])
+
+    donations_item = db.session.query(
+        DonationType.type, db.func.count(DonationItem.donationItem_id)
+    ).join(DonationItem, DonationItem.donation_type_id == DonationType.id).filter(
+        DonationItem.charity_campaign_id == campaign_id
+    ).group_by(DonationType.type).all()
+
+    donations_type = [donation[0] for donation in donations_item]
+    donations_count = [donation[1] for donation in donations_item]
+
+    df_donations_item = pd.DataFrame({
+        'donation_type': donations_type,
+        'donation_count': donations_count,
+    })
+
+    donations_types_chart = px.bar(df_donations_types, x='donation_type', y='count',
+                                   title='Donations by type', template=theme)
+
+    donations_money_chart = px.scatter(df_donations_money, x='donation_id', y='amount',
+                                       title='Money donations by amount', template=theme)
+
+    donations_item_chart = px.bar(df_donations_item, x='donation_type', y='donation_count',
+                                  color='donation_type', title='Item donations by type', template=theme)
+
+    donations_types_chart_json = json.dumps(donations_types_chart, cls=PlotlyJSONEncoder)
+    donations_money_chart_json = json.dumps(donations_money_chart, cls=PlotlyJSONEncoder)
+    donations_item_chart_json = json.dumps(donations_item_chart, cls=PlotlyJSONEncoder)
+
+    donations_types_html = df_donations_types.to_html(justify='left', index=False,
+                                                      classes='table table-bordered')
+
+    donations_money_html = df_donations_money.to_html(justify='left', index=False,
+                                                      classes='table table-bordered')
+
+    donations_money_stats_html = df_donations_money_stats.to_html(justify='left',
+                                                                  classes='table table-bordered')
+
+    donations_item_html = df_donations_item.to_html(justify='left', index=False,
+                                                    classes='table table-bordered')
+
+    return render_template('donors_report.jinja',
+                           donations_money=donations_money,
+                           donations_item=donations_item_all,
+                           donations_types_chart_json=donations_types_chart_json,
+                           donations_money_chart_json=donations_money_chart_json,
+                           donations_item_chart_json=donations_item_chart_json,
+                           donations_types_html=donations_types_html,
+                           donations_money_html=donations_money_html,
+                           donations_money_stats_html=donations_money_stats_html,
+                           donations_item_html=donations_item_html
+                           )
 
 
 @bp.route('/donor-report-csv', methods=['GET'])
@@ -352,120 +363,71 @@ def donor_report_csv():
                     headers={"Content-disposition": "attachment; filename=donor_report.csv"})
 
 
-@bp.route('/single-donor-report', methods=['GET'])
-@login_required
-@roles_required(['organization', 'donor', 'authorities', 'admin'])
-def single_donor_report():
+@bp.route('/donor-report')
+@roles_required(['organization', 'donor', 'authorities'])
+def donor_report():
     donor_id = request.args.get('donor_id', type=int)
+
     if not donor_id:
-        return "<h3>Brak parametru donor_id!</h3>", 400
+        message = _l('Please specify donor id!')
+        return f'<h3>{message}</h3>', 400
 
     donor = db.session.get(Donor, donor_id)
+
     if not donor:
-        return f"<h3>Donor o ID={donor_id} nie istnieje!</h3>", 404
+        message = _l('There is no donor with specified id!')
+        return f'<h3>{message}</h3>', 400
 
-    mlist = donor.donations_money
-    ilist = donor.donations_items
+    theme = get_theme()
 
-    total_money_sum = sum(m.cashAmount for m in mlist)
-    total_item_sum = sum(i.amount for i in ilist)
-    money_count = len(mlist)
-    item_count = len(ilist)
+    donations_item_query = db.session.query(
+        DonationType.type.label('donation_type'), db.func.count(DonationItem.id).label('donation_count')
+    ).join(DonationItem, DonationItem.donation_type_id == DonationType.id).filter(
+        DonationItem.donor_id == donor_id
+    ).group_by(DonationType.type)
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <title>Single Donor {donor_id}</title>
-      <link rel="stylesheet" type="text/css" href="../../static/style.css">
-    </head>
-    <body class="bg-light">
-      <div class="container mt-5">
-        <h1 class="text-primary text-center">Raport Donora {donor_id}</h1>
-        <p>Imię: {donor.first_name}, nazwisko: {donor.last_name}, email: {donor.email}, tel: {donor.phone_number}</p>
+    donations_money_query = db.session.query(
+        DonationType.type.label('donation_type'), db.func.count(DonationMoney.id).label('donation_count')
+    ).join(DonationMoney, DonationMoney.donation_type_id == DonationType.id).filter(
+        DonationMoney.donor_id == donor_id
+    ).group_by(DonationType.type)
 
-        <h2>Podsumowanie</h2>
-        <ul>
-          <li>Liczba donation_money: {money_count}</li>
-          <li>Liczba donation_items: {item_count}</li>
-          <li>Suma kasy: {total_money_sum}</li>
-          <li>Suma itemów: {total_item_sum}</li>
-        </ul>
+    donations_union_query = donations_item_query.union(donations_money_query).subquery()
 
-        <h3>DonationMoney</h3>
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>ID</th><th>Opis</th><th>Data</th><th>Kwota</th><th>Kampania</th><th>Typ(str)?</th></tr>
-          </thead>
-          <tbody>
-    """
-    for dm in mlist:
-        if dm.charity_campaign and dm.charity_campaign.charity_campaign:
-            camp_name = dm.charity_campaign.charity_campaign.name
-        else:
-            camp_name = "Brak kampanii"
+    donations_item = db.session.query(
+        donations_union_query.c.donation_type, db.func.sum(donations_union_query.c.donation_count)
+    ).group_by(donations_union_query.c.donation_type).all()
 
-        donation_type_str = dm.donation_type or "N/A"
-        html += f"""
-            <tr>
-              <td>{dm.donationMoney_id}</td>
-              <td>{dm.description}</td>
-              <td>{dm.donation_date}</td>
-              <td>{dm.cashAmount}</td>
-              <td>{camp_name}</td>
-              <td>{donation_type_str}</td>
-            </tr>
-        """
+    donations_type = [donation[0] for donation in donations_item]
+    donations_count = [donation[1] for donation in donations_item]
 
-    html += """
-          </tbody>
-        </table>
+    df_donations_item = pd.DataFrame({
+        'donation_type': donations_type,
+        'donation_count': donations_count,
+    })
 
-        <h3>DonationItem</h3>
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>ID</th><th>Opis</th><th>Data</th><th>TypID</th><th>Ilość</th><th>Kampania</th></tr>
-          </thead>
-          <tbody>
-    """
+    donations_money = donor.donations_money
+    donations_item = donor.donations_items
 
-    for di in ilist:
-        if di.charity_campaign and di.charity_campaign.charity_campaign:
-            camp_name = di.charity_campaign.charity_campaign.name
-        else:
-            camp_name = "Brak kampanii"
+    donations_money_sum = sum(donation.cashAmount for donation in donations_money)
+    donations_money_count = len(donations_money)
 
-        donation_type_str = f"TypeID={di.donation_type_id}"
-        html += f"""
-            <tr>
-              <td>{di.donationItem_id}</td>
-              <td>{di.description}</td>
-              <td>{di.donation_date}</td>
-              <td>{donation_type_str}</td>
-              <td>{di.amount}</td>
-              <td>{camp_name}</td>
-            </tr>
-        """
+    donations_item_count = len(donations_item)
 
-    html += f"""
-          </tbody>
-        </table>
-        <div class="mt-4">
-          <a href="/reports/single-donor-report-csv?donor_id={donor_id}" class="btn btn-success">
-            Pobierz CSV
-          </a>
-          <a href="/reports/ui" class="btn btn-secondary">Powrót</a>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return html
+    all_donations_count = donations_money_count + donations_item_count
+
+    donations_type_chart = px.bar(df_donations_item, x='donation_type', y='donation_count', title='Donations by Type', template=theme)
+    donations_type_chart_json = json.dumps(donations_type_chart, cls=PlotlyJSONEncoder)
+
+    return render_template('donor_report.jinja',
+                           donor=donor,
+                           all_donations_count=all_donations_count,
+                           donations_money_sum=donations_money_sum,
+                           df_donations_item=df_donations_item,
+                           donations_type_chart_json=donations_type_chart_json)
 
 
-@bp.route('/single-donor-report-csv', methods=['GET'])
-@login_required
+@bp.route('/single-donor-report-csv')
 @roles_required(['organization', 'donor', 'authorities', 'admin'])
 def single_donor_report_csv():
     donor_id = request.args.get('donor_id', type=int)
@@ -523,101 +485,83 @@ def single_donor_report_csv():
 
 
 # =================== RAPORT ORGANIZATION ===================
-@bp.route('/organization-report', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
+@bp.route('/organization-report')
+@roles_required(['organization', 'authorities'])
 def organization_report():
-    approval_stats = report_service.stats_organization_approval()
-    approval_chart_b64 = create_bar_chart_base64(
-        approval_stats,
-        "Organization: Approved vs. Not Approved"
-    )
+    campaign_id = request.args.get('campaign_id', type=int)
+    if not campaign_id:
+        message = _l('Please specify campaign id!')
+        return f'<h3>{message}</h3>', 400
 
-    org_list = report_service.get_all_organizations()
+    campaign = CharityCampaign.query.get(campaign_id)
+    if not campaign:
+        message = _l('There is no campaign with specified id!')
+        return f'<h3>{message}</h3>', 400
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8"/>
-      <title>Raport Organization</title>
-      <link rel="stylesheet" type="text/css" href="../../static/style.css">
-    </head>
-    <body class="bg-light">
-      <div class="container mt-5">
-        <h1 class="text-primary text-center">Raport Organization (z kampaniami)</h1>
-        <p>Statystyki dot. organizacji i ich kampanii.</p>
+    theme = get_theme()
 
-        <h2>1. Wykres: Approved vs. Not Approved</h2>
-        <img src="data:image/png;base64,{approval_chart_b64}" alt="Org Approved" />
+    org_campaigns = db.session.query(OrganizationCharityCampaign).filter_by(charity_campaign_id=campaign_id).all()
 
-        <hr/>
-        <h2>2. Lista Organization</h2>
-        <p>Niżej: kampanie i liczba wolontariuszy.</p>
-    """
+    org_data = []
+    for org_campaign in org_campaigns:
+        org = org_campaign.organization
 
-    for org in org_list:
-        camp_count = report_service.count_campaigns_per_organization(org)
-        vol_count = report_service.count_volunteers_per_organization(org)
+        item_stocks = db.session.query(
+            ItemStock.item_type_id, db.func.sum(ItemStock.amount)
+        ).filter(ItemStock.organization_charity_campaign_id == org_campaign.id).group_by(ItemStock.item_type_id).all()
 
-        html += f"""
-        <div class="bg-white border p-3 mb-4">
-          <h3>Organizacja: {org.organization_name or ""} (ID={org.id})</h3>
-          <p><strong>Opis:</strong> {org.description or ""}</p>
-          <p><strong>Approved?</strong> {org.approved}</p>
-          <p><strong>Liczba kampanii:</strong> {camp_count}, <strong>Wolontariuszy:</strong> {vol_count}</p>
-        """
+        item_stock_data = {item_type_id: amount for item_type_id, amount in item_stocks}
 
-        # Kampanie
-        org_campaigns = db.session.query(OrganizationCharityCampaign).filter_by(organization_id=org.id).all()
-        html += """
-          <h4>Kampanie tej organizacji:</h4>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Campaign ID</th>
-                <th>Nazwa kampanii</th>
-                <th>Opis kampanii</th>
-                <th>Liczba wolontariuszy</th>
-              </tr>
-            </thead>
-            <tbody>
-        """
-        for oc in org_campaigns:
-            c = oc.charity_campaign
-            camp_name = c.name if c else "Brak nazwy"
-            camp_desc = c.description if c else "Brak opisu"
-            volunteers_count = len(oc.volunteers)
-            html += f"""
-            <tr>
-              <td>{oc.id}</td>
-              <td>{camp_name}</td>
-              <td>{camp_desc}</td>
-              <td>{volunteers_count}</td>
-            </tr>
-            """
+        affected_requests_count = db.session.query(db.func.count(Request.id)).join(Affected).filter(
+            Request.charity_campaign_id == org_campaign.id).scalar()
 
-        html += """
-            </tbody>
-          </table>
-        </div>
-        """
+        volunteer_tasks_count = db.session.query(db.func.count(Task.id)).join(Volunteer).filter(
+            Task.charity_campaign_id == org_campaign.id).scalar()
 
-    html += """
-        <div class="mt-4">
-          <a href="/reports/organization-report-csv" class="btn btn-success">Pobierz CSV</a>
-          <a href="/reports/ui" class="btn btn-secondary">Powrót</a>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
-    return html
+        volunteers_count = db.session.query(db.func.count(Volunteer.id)).filter(
+            Volunteer.campaigns.any(OrganizationCharityCampaign.id == org.id)
+        ).scalar()
+
+        donations_money_count = db.session.query(db.func.count(DonationMoney.donationMoney_id)).filter(
+            DonationMoney.charity_campaign_id == org.id).scalar()
+
+        donations_item_count = db.session.query(db.func.count(DonationItem.donationItem_id)).filter(
+            DonationItem.charity_campaign_id == org.id).scalar()
+
+        org_data.append({
+            'organization': org.organization_name,
+            'item_stock_data': item_stock_data,
+            'affected_requests_count': affected_requests_count,
+            'volunteer_tasks_count': volunteer_tasks_count,
+            'volunteers_count': volunteers_count,
+            'donations_money_count': donations_money_count,
+            'donations_item_count': donations_item_count
+        })
+
+    df_org_data = pd.DataFrame(org_data)
+
+    item_stock_chart = px.bar(df_org_data.explode('item_stock_data'), x='organization', y='item_stock_data', title='Item Stock by Organization', template=theme)
+    affected_requests_chart = px.bar(df_org_data, x='organization', y='affected_requests_count', title='Affected Requests by Organization', template=theme)
+    volunteer_tasks_chart = px.bar(df_org_data, x='organization', y='volunteer_tasks_count', title='Volunteer Tasks by Organization', template=theme)
+    donations_chart = px.bar(df_org_data, x='organization', y=['donations_money_count', 'donations_item_count'], title='Donations by Organization', template=theme)
+
+    item_stock_chart_json = json.dumps(item_stock_chart, cls=PlotlyJSONEncoder)
+    affected_requests_chart_json = json.dumps(affected_requests_chart, cls=PlotlyJSONEncoder)
+    volunteer_tasks_chart_json = json.dumps(volunteer_tasks_chart, cls=PlotlyJSONEncoder)
+    donations_chart_json = json.dumps(donations_chart, cls=PlotlyJSONEncoder)
+
+    return render_template('organization_report.jinja',
+                           campaign=campaign,
+                           org_data=org_data,
+                           item_stock_chart_json=item_stock_chart_json,
+                           affected_requests_chart_json=affected_requests_chart_json,
+                           volunteer_tasks_chart_json=volunteer_tasks_chart_json,
+                           donations_chart_json=donations_chart_json,
+                           theme=theme)
 
 
-@bp.route('/organization-report-csv', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
+@bp.route('/organization-report-csv')
+@roles_required(['organization', 'authorities'])
 def organization_report_csv():
     org_list = report_service.get_all_organizations()
 

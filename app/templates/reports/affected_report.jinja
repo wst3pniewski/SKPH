@@ -1,0 +1,45 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Reports Affected") }}{% endblock %}
+
+{% block content %}
+<div class="container mb-3">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>{{ _("Voivodeship Statistics") }}</h2>
+            <div>{{ voiv_stats_html | safe }}</div>
+            <div class="mb-3" id="voiv-chart"></div>
+        </div>
+        <div class="col-md-6">
+            <h2>{{ _("City Statistics") }}</h2>
+            <div>{{ city_stats_html | safe }}</div>
+            <div class="mb-3" id="city-chart"></div>
+        </div>
+    </div>
+    <hr>
+    <h2 class="my-3">{{ _("Requests Statistics for") }}: {{ campaign.charity_campaign.name }}</h2>
+    <div>{{ requests_stats_html | safe }}</div>
+    <div class="mb-3" id="requests-chart"></div>
+    <div>{{ requests_status_stats_html | safe }}</div>
+    <div class="mb-3" id="requests-status-chart"></div>
+    <div>{{ requests_donation_type_stats_html | safe }}</div>
+    <div id="requests-donation-type-chart"></div>
+</div>
+
+{% endblock %}
+{% block ascript %}
+
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+<script>
+    var city_chart = {{ city_chart_json | safe }};
+    var requests_chart = {{ requests_chart_json | safe }};
+    var requests_status_chart = {{ requests_status_chart_json | safe }};
+    var requests_donation_type_chart = {{ requests_donation_type_chart_json | safe }};
+    var voiv_chart = {{ voiv_chart_json | safe }};
+    Plotly.newPlot('city-chart', city_chart);
+    Plotly.newPlot('requests-chart', requests_chart);
+    Plotly.newPlot('requests-status-chart', requests_status_chart);
+    Plotly.newPlot('requests-donation-type-chart', requests_donation_type_chart);
+    Plotly.newPlot('voiv-chart', voiv_chart);
+</script>
+{% endblock %}

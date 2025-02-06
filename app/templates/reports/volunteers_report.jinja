@@ -1,0 +1,30 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Reports Volunteers") }}{% endblock %}
+
+{% block content %}
+<div class="container mb-3">
+    <h2>{{ _("City Statistics") }}</h2>
+    <div>{{ city_stats_html | safe }}</div>
+    <div class="mb-3" id="city-chart"></div>
+
+    <h2>{{ _("Tasks Statistics") }}</h2>
+    <div>{{ tasks_stats_html | safe }}</div>
+    <div class="mb-3" id="tasks-chart"></div>
+    <div>{{ tasks_status_stats_html | safe }}</div>
+    <div id="tasks-status-chart"></div>
+</div>
+
+{% endblock %}
+{% block ascript %}
+
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+<script>
+    var city_chart = {{ city_chart_json | safe }};
+    var tasks_chart = {{ tasks_chart_json | safe }};
+    var tasks_status_chart = {{ tasks_status_chart_json | safe }}
+    Plotly.newPlot('city-chart', city_chart);
+    Plotly.newPlot('tasks-chart', tasks_chart);
+    Plotly.newPlot('tasks-status-chart', tasks_status_chart)
+</script>
+{% endblock %}

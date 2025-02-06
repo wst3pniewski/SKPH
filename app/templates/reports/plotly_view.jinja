@@ -3,7 +3,6 @@
 {% block title %}{{ _("Reports") }}{% endblock %}
 
 {% block script %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -12,10 +11,15 @@
     <div id="tasks-chart"></div>
 </div>
 
+{% endblock %}
+{% block ascript %}
+
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
 <script>
-    var city_chart = {{ city_chart_json | safe }};
+    var city_chart = JSON.parse('{{ city_chart_json | safe }}');
     var tasks_chart = {{ tasks_chart_json | safe }};
-    Plotly.newPlot('city-chart', city_chart.data, city_chart.layout);
+    Plotly.newPlot('city-chart', city_chart);
+    console.log(city_chart.data)
     Plotly.newPlot('tasks-chart', tasks_chart.data, tasks_chart.layout);
 </script>
 {% endblock %}
