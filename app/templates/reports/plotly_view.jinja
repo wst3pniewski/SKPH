@@ -1,0 +1,21 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Reports") }}{% endblock %}
+
+{% block script %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div id="city-chart"></div>
+    <div id="tasks-chart"></div>
+</div>
+
+<script>
+    var city_chart = {{ city_chart_json | safe }};
+    var tasks_chart = {{ tasks_chart_json | safe }};
+    Plotly.newPlot('city-chart', city_chart.data, city_chart.layout);
+    Plotly.newPlot('tasks-chart', tasks_chart.data, tasks_chart.layout);
+</script>
+{% endblock %}

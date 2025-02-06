@@ -1,18 +1,24 @@
 import csv
 import io
+import json
 
+import pandas as pd
+import plotly.graph_objs as go
 from flask import Blueprint, Response, render_template, request
 from flask_login import login_required
+from plotly.utils import PlotlyJSONEncoder
 
-from app.extensions import db
-from app.models.affected import Affected
-from app.models.donor import Donor
-from app.models.charity_campaign import OrganizationCharityCampaign
 from app.auth.user_service import roles_required
+from app.extensions import db
+from app.models.address import Address
+from app.models.affected import Affected
+from app.models.charity_campaign import OrganizationCharityCampaign
+from app.models.donor import Donor
+from app.models.task import Task
+from app.models.volunteer import Volunteer
 
 from .chart_utils import create_bar_chart_base64
 from .report_service import ReportService
-
 
 bp = Blueprint("reports", __name__, template_folder="templates/reports", static_folder="../static/reports")
 report_service = ReportService()
@@ -64,15 +70,12 @@ def affected_report():
     for aff in affected_list:
         city = aff.address.city if aff.address else ""
         voiv = aff.address.voivodeship if aff.address else ""
-        camp_name = aff.campaign.name if aff.campaign else "Brak kampanii"
-        camp_desc = aff.campaign.description if aff.campaign else ""
 
         html += f"""
         <div class="border p-3 mb-3 bg-white">
           <h3>Affected ID={aff.id}: {aff.first_name} {aff.last_name}</h3>
           <p>Needs: {aff.needs or ""}</p>
           <p>Adres: {city}, {voiv}</p>
-          <p>Kampania: {camp_name} - {camp_desc}</p>
         """
 
         req_list = aff.requests
@@ -80,8 +83,8 @@ def affected_report():
             html += "<h4>Requesty:</h4><ul>"
             for r in req_list:
                 donation_type_str = getattr(r, "donation_type", "N/A")
-                req_city = r.req_address.city if r.req_address else ""
-                req_voiv = r.req_address.voivodeship if r.req_address else ""
+                req_city = r.address.city if r.address else ""
+                req_voiv = r.address.voivodeship if r.address else ""
                 html += (f"<li>ReqID={r.id}, name={r.name}, status={r.status.value},"
                          f" type={donation_type_str}, amount={r.amount}, address=({req_city},{req_voiv})</li>")
             html += "</ul>"
@@ -210,6 +213,36 @@ def volunteer_report_csv():
     output.close()
     return Response(csv_data, mimetype="text/csv",
                     headers={"Content-disposition": "attachment; filename=volunteer_report.csv"})
+
+
+@bp.route('/volunteer-report-plotly', methods=['GET'])
+@login_required
+@roles_required(['organization', 'authorities', 'admin'])
+def volunteer_report_plotly():
+    city_stats = db.session.query(
+        Address.city, db.func.count(Volunteer.id)
+    ).join(Volunteer).group_by(Address.city).all()
+    print(city_stats)
+    df_city_stats = pd.DataFrame(city_stats)
+    print(df_city_stats)
+    tasks_stats = db.session.query(
+        Volunteer.id, db.func.count(Task.id)
+    ).join(Task).group_by(Volunteer.id).all()
+
+    city_chart = go.Figure(data=[
+        go.Bar(x=[stat[0] for stat in city_stats], y=[stat[1] for stat in city_stats])
+    ])
+    city_chart.update_layout(title="Volunteer wg Miasta", template="plotly_dark")
+
+    tasks_chart = go.Figure(data=[
+        go.Bar(x=[stat[0] for stat in tasks_stats], y=[stat[1] for stat in tasks_stats])
+    ])
+    tasks_chart.update_layout(title="Volunteer wg liczby zadań", template="plotly_dark")
+
+    city_chart_json = json.dumps(city_chart, cls=PlotlyJSONEncoder)
+    tasks_chart_json = json.dumps(tasks_chart, cls=PlotlyJSONEncoder)
+
+    return render_template('reports/plotly_view.jinja', city_chart_json=city_chart_json, tasks_chart_json=tasks_chart_json)
 
 
 # =================== RAPORT DONOR ===================
