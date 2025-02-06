@@ -1,30 +1,33 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import JSON, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.extensions import db
 
 
 class Coordinates(db.Model):
     __tablename__ = 'coordinates'
-    id = Column(Integer, primary_key=True)
-    x = Column(Float)
-    y = Column(Float)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    x: Mapped[float] = mapped_column(nullable=False)
+    y: Mapped[float] = mapped_column(nullable=False)
 
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
 
     def __repr__(self):
-        return f"Coordinates({self.x}, {self.y})"
+        return f"<Coordinates(id={self.id!r}, x={self.x!r}, y={self.y!r})"
 
 
 class POI(db.Model):
     __tablename__ = 'poi'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    coordinates_id = Column(Integer, ForeignKey('coordinates.id'))
-    coordinates = relationship('Coordinates', backref='poi')
-    status = Column(Boolean, default=True)  # Status jako boolean
-    type_of_poi = Column(String)  # Nowa kolumna na typ punktu
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    coordinates_id: Mapped[int] = mapped_column(ForeignKey('coordinates.id'))
+    coordinates: Mapped[Coordinates] = relationship(backref='poi')
+    status: Mapped[bool] = mapped_column(default=True, nullable=False)
+    type_of_poi: Mapped[str] = mapped_column(nullable=False)
 
     def __init__(self, name: str, coordinates: Coordinates,
                  type_of_poi: str, status: bool = True):
@@ -34,16 +37,17 @@ class POI(db.Model):
         self.status = status
 
     def __repr__(self):
-        return (f"{self.name} ({self.coordinates.x}, {self.coordinates.y}, "
-                f"Type: {self.type_of_poi}, Status: {self.status})")
+        return f"<POI(id={self.id!r} ,name={self.name!r}, coordinates={self.coordinates!r}, \
+                type_of_poi={self.type_of_poi!r}, status={self.status!r})>"
 
 
 class DangerArea(db.Model):
     __tablename__ = 'danger_area'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    status = Column(Boolean, default=True)  # Status jako boolean
-    coordinates = Column(JSON)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[bool] = mapped_column(default=True)
+    coordinates: Mapped[str] = mapped_column(JSON, nullable=False)
 
     def __init__(self, name: str, coordinates: list, status: bool = True):
         self.name = name
@@ -51,15 +55,17 @@ class DangerArea(db.Model):
         self.status = status
 
     def __repr__(self):
-        return f"DangerArea({self.name}, Status: {self.status})"
+        return f"<DangerArea(id={self.id!r}, name={self.name!r}, status={self.status}, \
+                coordinates={self.coordinates!r})>"
 
 
 class ReliefArea(db.Model):
     __tablename__ = 'relief_area'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    status = Column(Boolean, default=True)
-    coordinates = Column(JSON)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[bool] = mapped_column(default=True, nullable=False)
+    coordinates: Mapped[str] = mapped_column(JSON, nullable=False)
 
     def __init__(self, name: str, coordinates: list, status: bool = True):
         self.name = name
@@ -67,4 +73,5 @@ class ReliefArea(db.Model):
         self.status = status
 
     def __repr__(self):
-        return f"ReliefArea({self.name}, Status: {self.status})"
+        return f"<ReliefArea(id={self.id} ,name={self.name}, status={self.status}, \
+                coordinates={self.coordinates!r})>"
