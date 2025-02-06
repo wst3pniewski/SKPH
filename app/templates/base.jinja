@@ -254,9 +254,11 @@
                 const newNotification = document.createElement("li");
                 newNotification.className = "list-group-item";
                 if (notification.type == NotificationType.MESSAGE) {
-                  newNotification.innerHTML = `{{ _("New message from") }}: ${notification.message} <small>${notification.timestamp}</small>`;
+                  newNotification.innerHTML = `<strong>{{ _("New message from") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
                 } else if (notification.type == NotificationType.DONATION) {
-                  newNotification.innerHTML = `{{ _("New donation from") }}: ${notification.message} <small>${notification.timestamp}</small>`;
+                  newNotification.innerHTML = `<strong>{{ _("New donation") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
+                } else if (notification.type == NotificationType.REQUEST) {
+                  newNotification.innerHTML = `<strong>{{ _("New request") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
                 } else {
                   newNotification.innerHTML = `${notification.message} <small>${notification.timestamp}</small>`;
                 }

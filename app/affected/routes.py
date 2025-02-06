@@ -1,6 +1,6 @@
 from flask import (Blueprint, flash, redirect, render_template,
                    render_template_string, request, session, url_for)
-from flask_babel import gettext as _
+from flask_babel import lazy_gettext as _l
 from flask_login import current_user
 from flask_mailman import EmailMessage
 
@@ -13,6 +13,7 @@ from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
                                          OrganizationCharityCampaign)
 from app.models.donation import DonationType
+from app.models.notification import Notification, NotificationType
 from app.models.request import Request, RequestStatus
 
 bp = Blueprint('affected', __name__,
@@ -68,7 +69,7 @@ def index():
 def my_details():
     affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
     if not affected:
-        flash('No data found for the current user.')
+        flash(_l('No data found for the current user.'))
         return redirect(url_for('affected.index'))
 
     requests = db.session.query(Request).filter_by(affected_id=affected.id).all()
@@ -121,14 +122,14 @@ def requests_for_org_charity_campaign():
 def create_request():
     affected = db.session.scalar(db.select(Affected).where(Affected.user_id == current_user.id))
     if not affected:
-        flash('No data found for the current user.')
+        flash(_l('No data found for the current user.'))
         return redirect(url_for('affected.index'))
 
     form = CreateRequestForm()
     # translation purpose
-    donation_types = [_('Food'), _('Clothes'), _('Shelter'), _('Medical Supplies')]
+    donation_types = [_l('Food'), _l('Clothes'), _l('Shelter'), _l('Medical Supplies')]
 
-    form.needs.choices = [(dt.id, _(dt.type)) for dt in db.session.scalars(db.select(DonationType)).all()]
+    form.needs.choices = [(dt.id, _l(dt.type)) for dt in db.session.scalars(db.select(DonationType)).all()]
     form.charity_campaign_id.choices = [
         (cc.id, f"{cc.charity_campaign.name} - {cc.organization.organization_name}")
         for cc in db.session.scalars(db.select(OrganizationCharityCampaign)).all()
@@ -143,6 +144,8 @@ def create_request():
         city = form.address.city.data
         voivodeship = form.address.voivodeship.data
         charity_campaign_id = form.charity_campaign_id.data
+
+        charity_campaign = OrganizationCharityCampaign.query.get(charity_campaign_id)
 
         new_address = Address(
             street=street,
@@ -162,9 +165,18 @@ def create_request():
             affected_id=affected.id,
             charity_campaign_id=charity_campaign_id
         )
+
+        new_notification = Notification(
+            user_id=charity_campaign.organization.user_id,
+            message=f"{affected.first_name} {affected.last_name}: {name}",
+            type=NotificationType.REQUEST
+        )
+
+        db.session.add(new_notification)
         db.session.add(new_request)
         db.session.commit()
 
+        flash(_l('Donation created successfully!'))
         return redirect(url_for('affected.my_details'))
 
     return render_template('create_request_wtf.jinja', form=form, affected=affected)
@@ -204,7 +216,7 @@ def edit_request(request_id):
 def update_request_status(request_id):
     request_obj = db.get_or_404(Request, request_id)
     form = UpdateRequestStatusForm(obj=request_obj)
-    form.status.choices = [(status.name, _(status.value)) for status in RequestStatus]
+    form.status.choices = [(status.name, _l(status.value)) for status in RequestStatus]
 
     if form.validate_on_submit():
         new_status = form.status.data
@@ -242,7 +254,7 @@ def delete_request(request_id):
 @bp.route('/samples', methods=['POST'])
 def samples():
     if db.session.query(Affected).count() > 0:
-        flash('Sample data already added!')
+        flash(_l('Sample data already added!'))
         return redirect(url_for('affected.index'))
 
     with db.session() as session:
@@ -300,5 +312,5 @@ def samples():
         session.add(req2)
         session.commit()
 
-    flash('Sample data added successfully!')
+    flash(_l('Sample data added successfully!'))
     return redirect(url_for('affected.index'))

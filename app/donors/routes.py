@@ -3,7 +3,9 @@ from datetime import date
 
 from flask import (Blueprint, abort, flash, redirect, render_template,
                    send_file, url_for)
-from flask_babel import gettext as _
+
+from flask_babel import lazy_gettext as _l
+
 from flask_login import current_user
 from fpdf import FPDF
 
@@ -50,7 +52,7 @@ def fetch_donors():
 @roles_required(['donor'])
 def create_donation():
     form = CreateDonationForm()
-    form.donation_type.choices = [(item.id, _(item.type)) for item in db.session.scalars(db.select(DonationType)).all()]
+    form.donation_type.choices = [(item.id, _l(item.type)) for item in db.session.scalars(db.select(DonationType)).all()]
     form.organization_charity_campaign_id.choices = [(campaign.id, f"{campaign.charity_campaign.name} ({campaign.organization.organization_name})") for campaign in db.session.scalars(db.select(OrganizationCharityCampaign)).all()]
 
     if form.validate_on_submit():
@@ -97,7 +99,7 @@ def create_donation():
                 db.session.add(curr_stock)
 
             db.session.commit()
-            flash('Donation created successfully')
+            flash(_l('Donation created successfully'))
         else:
             new_donation_item = DonationItem(
                 description=description,
@@ -130,7 +132,7 @@ def create_donation():
                 db.session.add(curr_stock)
 
             db.session.commit()
-            flash('Donation created successfully')
+            flash(_l('Donation created successfully'))
 
         return redirect(url_for('home', donor_id=donor.donor_id))
     return render_template('create_donation.jinja', form=form)
@@ -146,7 +148,7 @@ def list_donations():
 
     donor = db.session.get(Donor, donor.donor_id)
     if Donor is None:
-        return 'Donor not found', 404
+        return abort(404)
 
     donations_money = db.session.scalars(
         db.select(DonationMoney).where(DonationMoney.donor_id == donor.donor_id)
@@ -163,8 +165,8 @@ def list_donations():
 def confirm_point(donation_item_id):
     donation = db.session.scalar(db.select(DonationItem).filter(DonationItem.donationItem_id == donation_item_id))
     if not donation:
-        flash("Nie znaleziono przedmiotu o podanym ID.")
-        return redirect('/')
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
 
     flash(str(donation.return_confirmation()))
     return redirect(url_for('donors.list_donations'))
@@ -174,33 +176,29 @@ def confirm_point(donation_item_id):
 def download_pdf(donation_money_id):
     donation = db.session.scalar(db.select(DonationMoney).filter(DonationMoney.donationMoney_id == donation_money_id))
     if not donation:
-        flash("Nie znaleziono przedmiotu o podanym ID.")
-        return redirect('/')
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
 
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
-    # Add SKPH header
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
     pdf.ln(10)
 
-    # Donation details
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
     pdf.ln(10)
     pdf.set_font("Arial", size=12)
 
-    # Table headers
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(50, 10, txt="Field", border=1, align='C')
     pdf.cell(140, 10, txt="Details", border=1, align='C')
     pdf.ln(10)
 
-    # Table content
     pdf.set_font("Arial", size=12)
     pdf.cell(50, 10, txt="Description", border=1)
     pdf.cell(140, 10, txt=donation.description, border=1)
@@ -218,7 +216,6 @@ def download_pdf(donation_money_id):
     pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
     pdf.ln(10)
 
-    # Footer
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
     pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')

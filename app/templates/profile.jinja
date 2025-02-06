@@ -39,10 +39,9 @@
             </div>
         </div>
         <div class="col-lg-12">
-            <!-- Personal Information -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">{{ __("Personal Information") }}</h5>
+                    <h5 class="mb-0">{{ _("Personal Information") }}</h5>
                     <button class="btn btn-sm btn-primary">{{ _("Edit") }}</button>
                 </div>
                 <div class="card-body">
@@ -77,10 +76,6 @@
                         {% else %}
                         <a href="{{ url_for('auth.remove_totp') }}" class="btn btn-danger btn-sm">{{ _("Remove 2FA")
                             }}</a>
-                        {# <form action="{{ url_for('auth.remove_totp') }}" method="POST">
-                            {{ form.hidden_tag() }}
-                            <button type="submit" class="btn btn-danger">{{ _("Remove TOTP") }}</button>
-                        </form> #}
                         {% endif %}
                     </div>
                     <small class="text-muted">
@@ -91,25 +86,6 @@
     </section>
     <br>
     {% block additional_info %}{% endblock %}
-</div>
-
-<!-- Edit Profile Modal -->
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editProfileModalLabel">{{ _("Edit Profile") }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Profile Edit Form -->
-                <form id="editProfileForm">
-                    {% block specific_user_edit_modal %}{% endblock %}
-                    <button type="submit" class="btn btn-success">Save Changes</button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="modal fade" id="editPhotoModal" tabindex="-1" aria-labelledby="editPhotoModalLabel" aria-hidden="true">
@@ -136,23 +112,5 @@
 {% endblock %}
 {% block ascript %}
 <script>
-    $(document).ready(function () {
-        $('#editProfileForm').submit(function (e) {
-            e.preventDefault();
-
-            $.ajax({
-                type: 'POST',
-                url: '/auth/update_profile',
-                data: $(this).serialize(),
-                success: function (response) {
-                    alert(response.message);
-                    $('#editProfileModal').modal('hide');
-                },
-                error: function () {
-                    alert("Error updating profile. Please try again.");
-                }
-            });
-        });
-    });
 </script>
 {% endblock %}
