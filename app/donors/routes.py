@@ -17,6 +17,7 @@ from app.models.charity_campaign import (CharityCampaign,
 from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
+from app.models.notification import Notification, NotificationType
 from app.models.organization import Organization
 
 bp = Blueprint('donors', __name__,
@@ -71,8 +72,16 @@ def create_donation():
                 donor=donor,
                 charity_campaign_id=charity_campaign_id
             )
+
+            new_notification = Notification(
+                user_id=charity_campaign.organization.user_id,
+                message=f"{donor.first_name} {donor.last_name}: {description}",
+                type=NotificationType.DONATION
+            )
+
             charity_campaign.donations_money.append(new_donation_money)
             db.session.add(new_donation_money)
+            db.session.add(new_notification)
 
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
                 .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id, DonationType.type == 'Money') \
@@ -98,6 +107,14 @@ def create_donation():
                 donor_id=donor.donor_id,
                 charity_campaign_id=charity_campaign_id
             )
+
+            new_notification = Notification(
+                user_id=charity_campaign.organization.user_id,
+                message=f"{donor.first_name} {donor.last_name}: {description}",
+                type=NotificationType.DONATION
+            )
+
+            db.session.add(new_notification)
             db.session.add(new_donation_item)
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
                 .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id,

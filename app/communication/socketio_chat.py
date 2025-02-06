@@ -1,4 +1,3 @@
-from ssl import socket_error
 from flask import current_app as app
 from flask_socketio import SocketIO, emit, join_room
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.extensions import db
 from app.models.message import Message
 from app.models.user import User
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationType
 
 socketio = SocketIO()
 
@@ -33,7 +32,8 @@ def handle_message(data):
 
             new_notification = Notification(
                 user_id=receiver.id,
-                message=f"New message from {sender_email}: {message_content}"
+                message=f"{sender_email}",
+                type=NotificationType.MESSAGE
             )
 
             db.session.add(new_notification)
@@ -77,7 +77,7 @@ def handle_join_room(user_email):
         join_room(user_email)
         app.logger.info(f"User {user_email} joined their personal room.")
     else:
-        app.logger.error(f'No user email provided for joining room.')
+        app.logger.error('No user email provided for joining room.')
 
 
 @socketio.on('connect')

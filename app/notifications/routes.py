@@ -14,7 +14,8 @@ def get_unread_notifications():
     return jsonify([{
         'id': n.id,
         'message': n.message,
-        'timestamp': n.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        'timestamp': n.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'type': n.type.value
     } for n in notifications])
 
 
