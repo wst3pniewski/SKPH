@@ -13,13 +13,13 @@ from app.auth.user_service import init_login_manager
 from app.communication.routes import bp as chat_bp
 from app.communication.socketio_chat import socketio
 from app.donors.routes import bp as donors_bp
-from app.extensions import babel, csrf, db, get_locale, mail, migrate
+from app.extensions import babel, csrf, db, get_locale, hcaptcha, mail, migrate
 from app.maps.routes import bp as maps_bp
+from app.notifications.routes import bp as notifications_bp
 from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
 from app.supply_chain.routes import bp as supply_chain_bp
 from app.volunteers.routes import bp as volunteers_bp
-from app.notifications.routes import bp as notifications_bp
 from config import config
 
 # Create logs directory if it doesn't exist
@@ -48,6 +48,7 @@ def create_app(config_name=None):
     socketio.init_app(flask_app)
     csrf.init_app(flask_app)
     migrate.init_app(flask_app, db)
+    hcaptcha.init_app(flask_app)
 
     # Logging
     flask_app.logger.addHandler(file_handler)

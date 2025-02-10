@@ -18,6 +18,7 @@ Flask-WTF~=1.2.2
 email-validator~=2.2.0
 pyotp>=2.9.0
 qrcode[pil]>=8.0
+flask-hcaptcha>=0.7.2
 
 # Communication
 Flask-SocketIO==5.5.1
@@ -41,3 +42,6 @@ fpdf2>=2.8.2
 # Plotting
 pandas>=2.2.3
 plotly>=6.0.0
+
+# Utils
+python-dotenv>=1.0.1

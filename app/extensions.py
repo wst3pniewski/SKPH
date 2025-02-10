@@ -1,5 +1,6 @@
 from flask import request
 from flask_babel import Babel
+from flask_hcaptcha import hCaptcha
 from flask_mailman import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -20,3 +21,4 @@ babel = Babel()
 mail = Mail()
 csrf = CSRFProtect()
 migrate = Migrate()
+hcaptcha = hCaptcha()

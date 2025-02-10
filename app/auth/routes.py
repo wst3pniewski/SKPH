@@ -21,7 +21,7 @@ from app.auth.register_forms import (AffectedRegisterForm,
 from app.auth.reset_password_forms import (ResetPasswordForm,
                                            ResetPasswordRequestForm)
 from app.auth.user_service import roles_required, send_reset_password_email
-from app.extensions import csrf, db
+from app.extensions import csrf, db, hcaptcha
 from app.forms.totp_wtf import RemoveTOTPForm, SetupTOTPForm, VerifyTOTPForm
 from app.models.address import Address
 from app.models.affected import Affected
@@ -178,14 +178,18 @@ def login():
     if form.validate_on_submit():
         email = form.email.data
         password = form.password.data
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            if user.totp_secret:
-                return redirect(url_for('auth.verify_totp', user_id=user.id))
-            login_user(user)
-            return redirect(url_for('home'))
-        flash(_('Invalid email or password.'), 'danger')
-
+        if hcaptcha.verify():
+            user = User.query.filter_by(email=email).first()
+            if user and user.check_password(password):
+                if user.totp_secret:
+                    return redirect(url_for('auth.verify_totp', user_id=user.id))
+                login_user(user)
+                return redirect(url_for('home'))
+            else:
+                flash(_('Invalid email or password.'), 'danger')
+        else:
+            flash(_('Captcha not done'), 'danger')
+    # hcaptcha=hcaptcha.get_code(theme='dark')
     return render_template('login.jinja', form=form)
 
 
