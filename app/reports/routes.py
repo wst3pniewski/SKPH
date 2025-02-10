@@ -14,7 +14,8 @@ from app.auth.user_service import roles_required
 from app.extensions import db
 from app.models.address import Address
 from app.models.affected import Affected
-from app.models.charity_campaign import CharityCampaign, OrganizationCharityCampaign
+from app.models.charity_campaign import (CharityCampaign,
+                                         OrganizationCharityCampaign)
 from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
@@ -47,7 +48,7 @@ def ui():
     return render_template('reports.jinja')
 
 
-# =================== RAPORT AFFECTED ===================
+# =================== REPORTS ===================
 @bp.route('/affected-report')
 @roles_required(['authorities', 'organization'])
 def affected_report():
@@ -138,30 +139,6 @@ def affected_report():
                            voiv_chart_json=voiv_chart_json)
 
 
-@bp.route('/affected-report-csv')
-@roles_required(['authorities', 'organization'])
-def affected_report_csv():
-    affected_list = db.session.query(Affected).all()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["ID", "FirstName", "LastName", "Needs", "City", "Voiv", "Campaign", "RequestsCount"])
-
-    for aff in affected_list:
-        city = aff.address.city if aff.address else ""
-        voiv = aff.address.voivodeship if aff.address else ""
-        camp_name = aff.campaign.name if aff.campaign else ""
-        req_count = len(aff.requests) if aff.requests else 0
-
-        writer.writerow([aff.id, aff.first_name, aff.last_name, aff.needs or "", city, voiv, camp_name, req_count])
-
-    csv_data = output.getvalue()
-    output.close()
-    return Response(csv_data, mimetype="text/csv",
-                    headers={"Content-disposition": "attachment; filename=affected_report.csv"})
-
-# =================== RAPORT VOLUNTEER ===================
-
-
 @bp.route('/volunteer-report')
 @roles_required(['organization', 'authorities'])
 def volunteer_report():
@@ -225,28 +202,6 @@ def volunteer_report():
                            city_chart_json=city_chart_json,
                            tasks_chart_json=tasks_chart_json,
                            tasks_status_chart_json=tasks_status_chart_json)
-
-
-@bp.route('/volunteer-report-csv', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
-def volunteer_report_csv():
-    volunteer_list = report_service.get_all_volunteers()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["ID", "Imię", "Nazwisko", "Miasto", "Województwo", "TasksCount"])
-
-    for vol in volunteer_list:
-        city = vol.address.city if vol.address else ""
-        voiv = vol.address.voivodeship if vol.address else ""
-        tcount = len(vol.tasks)
-        writer.writerow([vol.id, vol.first_name, vol.last_name, city, voiv, tcount])
-
-    csv_data = output.getvalue()
-    output.close()
-    return Response(csv_data, mimetype="text/csv",
-                    headers={"Content-disposition": "attachment; filename=volunteer_report.csv"})
-# =================== RAPORT DONOR ===================
 
 
 @bp.route('/donors-report')
@@ -343,26 +298,6 @@ def donors_report():
                            )
 
 
-@bp.route('/donor-report-csv', methods=['GET'])
-@login_required
-@roles_required(['organization', 'authorities', 'admin'])
-def donor_report_csv():
-    donors = report_service.get_all_donors()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["DonorID", "Name", "Surname", "Email", "PhoneNumber", "#money", "#items"])
-
-    for d in donors:
-        mcount = len(d.donations_money)
-        icount = len(d.donations_items)
-        writer.writerow([d.donor_id, d.first_name, d.last_name, d.email, d.phone_number, mcount, icount])
-
-    csv_data = output.getvalue()
-    output.close()
-    return Response(csv_data, mimetype="text/csv",
-                    headers={"Content-disposition": "attachment; filename=donor_report.csv"})
-
-
 @bp.route('/donor-report')
 @roles_required(['organization', 'donor', 'authorities'])
 def donor_report():
@@ -427,6 +362,150 @@ def donor_report():
                            donations_type_chart_json=donations_type_chart_json)
 
 
+@bp.route('/campaign-report')
+@roles_required(['authorities'])
+def campaign_report():
+    campaign_id = request.args.get('campaign_id', type=int)
+    if not campaign_id:
+        message = _l('Please specify campaign id!')
+        return f'<h3>{message}</h3>', 400
+
+    campaign = CharityCampaign.query.get(campaign_id)
+    if not campaign:
+        message = _l('There is no campaign with specified id!')
+        return f'<h3>{message}</h3>', 400
+
+    theme = get_theme()
+
+    org_campaigns = db.session.query(OrganizationCharityCampaign).filter_by(charity_campaign_id=campaign_id).all()
+
+    org_data = []
+    for org_campaign in org_campaigns:
+        org = org_campaign.organization
+
+        item_stocks = db.session.query(
+            ItemStock.item_type_id, DonationType.type, db.func.sum(ItemStock.amount)
+        ).join(DonationType, ItemStock.item_type_id == DonationType.id).filter(
+            ItemStock.organization_charity_campaign_id == org_campaign.id
+        ).group_by(ItemStock.item_type_id, DonationType.type).all()
+
+        item_stock_data = {item_type: amount for _, item_type, amount in item_stocks}
+
+        affected_requests_count = db.session.query(db.func.count(Request.id)).join(Affected).filter(
+            Request.charity_campaign_id == org_campaign.id).scalar()
+
+        volunteer_tasks_count = db.session.query(db.func.count(Task.id)).join(Volunteer).filter(
+            Task.charity_campaign_id == org_campaign.id).scalar()
+
+        volunteers_count = db.session.query(db.func.count(Volunteer.id)).filter(
+            Volunteer.campaigns.any(OrganizationCharityCampaign.id == org.id)
+        ).scalar()
+
+        donations_money_count = db.session.query(db.func.count(DonationMoney.donationMoney_id)).filter(
+            DonationMoney.charity_campaign_id == org.id).scalar()
+
+        donations_item_count = db.session.query(db.func.count(DonationItem.donationItem_id)).filter(
+            DonationItem.charity_campaign_id == org.id).scalar()
+
+        org_data.append({
+            'organization_name': org.organization_name,
+            'organization_description': org.description,
+            'organization_approved': org.approved,
+            'item_stock_data': item_stock_data,
+            'affected_requests_count': affected_requests_count,
+            'volunteer_tasks_count': volunteer_tasks_count,
+            'volunteers_count': volunteers_count,
+            'donations_money_count': donations_money_count,
+            'donations_item_count': donations_item_count
+        })
+
+    df_org_data = pd.DataFrame(org_data)
+    item_stock_chart = px.bar(df_org_data.explode('item_stock_data'), x='organization_name', y='item_stock_data', title='Item Stock by Organization', template=theme)
+    affected_requests_chart = px.bar(df_org_data, x='organization_name', y='affected_requests_count', title='Affected Requests by Organization', template=theme)
+    volunteer_tasks_chart = px.bar(df_org_data, x='organization_name', y='volunteer_tasks_count', title='Volunteer Tasks by Organization', template=theme)
+    donations_chart = px.bar(df_org_data, x='organization_name', y=['donations_money_count', 'donations_item_count'], title='Donations by Organization', template=theme)
+
+    item_stock_chart_json = json.dumps(item_stock_chart, cls=PlotlyJSONEncoder)
+    affected_requests_chart_json = json.dumps(affected_requests_chart, cls=PlotlyJSONEncoder)
+    volunteer_tasks_chart_json = json.dumps(volunteer_tasks_chart, cls=PlotlyJSONEncoder)
+    donations_chart_json = json.dumps(donations_chart, cls=PlotlyJSONEncoder)
+
+    return render_template('campaign_report.jinja',
+                           campaign=campaign,
+                           org_data=org_data,
+                           item_stock_chart_json=item_stock_chart_json,
+                           affected_requests_chart_json=affected_requests_chart_json,
+                           volunteer_tasks_chart_json=volunteer_tasks_chart_json,
+                           donations_chart_json=donations_chart_json,
+                           theme=theme)
+
+
+# =================== REPORT ORGANIZATION ===================
+
+
+# =================== REPORT CSV ===================
+
+@bp.route('/affected-report-csv')
+@roles_required(['authorities', 'organization'])
+def affected_report_csv():
+    affected_list = db.session.query(Affected).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "FirstName", "LastName", "Needs", "City", "Voiv", "Campaign", "RequestsCount"])
+
+    for aff in affected_list:
+        city = aff.address.city if aff.address else ""
+        voiv = aff.address.voivodeship if aff.address else ""
+        camp_name = aff.campaign.name if aff.campaign else ""
+        req_count = len(aff.requests) if aff.requests else 0
+
+        writer.writerow([aff.id, aff.first_name, aff.last_name, aff.needs or "", city, voiv, camp_name, req_count])
+
+    csv_data = output.getvalue()
+    output.close()
+    return Response(csv_data, mimetype="text/csv",
+                    headers={"Content-disposition": "attachment; filename=affected_report.csv"})
+
+
+@bp.route('/volunteer-report-csv', methods=['GET'])
+@roles_required(['organization', 'authorities', 'admin'])
+def volunteer_report_csv():
+    volunteer_list = report_service.get_all_volunteers()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Imię", "Nazwisko", "Miasto", "Województwo", "TasksCount"])
+
+    for vol in volunteer_list:
+        city = vol.address.city if vol.address else ""
+        voiv = vol.address.voivodeship if vol.address else ""
+        tcount = len(vol.tasks)
+        writer.writerow([vol.id, vol.first_name, vol.last_name, city, voiv, tcount])
+
+    csv_data = output.getvalue()
+    output.close()
+    return Response(csv_data, mimetype="text/csv",
+                    headers={"Content-disposition": "attachment; filename=volunteer_report.csv"})
+
+
+@bp.route('/donor-report-csv', methods=['GET'])
+@roles_required(['organization', 'authorities', 'admin'])
+def donor_report_csv():
+    donors = report_service.get_all_donors()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["DonorID", "Name", "Surname", "Email", "PhoneNumber", "#money", "#items"])
+
+    for d in donors:
+        mcount = len(d.donations_money)
+        icount = len(d.donations_items)
+        writer.writerow([d.donor_id, d.first_name, d.last_name, d.email, d.phone_number, mcount, icount])
+
+    csv_data = output.getvalue()
+    output.close()
+    return Response(csv_data, mimetype="text/csv",
+                    headers={"Content-disposition": "attachment; filename=donor_report.csv"})
+
+
 @bp.route('/single-donor-report-csv')
 @roles_required(['organization', 'donor', 'authorities', 'admin'])
 def single_donor_report_csv():
@@ -482,82 +561,6 @@ def single_donor_report_csv():
     output.close()
     return Response(csv_data, mimetype="text/csv",
                     headers={"Content-disposition": f"attachment; filename=donor_{donor_id}_report.csv"})
-
-
-# =================== RAPORT ORGANIZATION ===================
-@bp.route('/organization-report')
-@roles_required(['organization', 'authorities'])
-def organization_report():
-    campaign_id = request.args.get('campaign_id', type=int)
-    if not campaign_id:
-        message = _l('Please specify campaign id!')
-        return f'<h3>{message}</h3>', 400
-
-    campaign = CharityCampaign.query.get(campaign_id)
-    if not campaign:
-        message = _l('There is no campaign with specified id!')
-        return f'<h3>{message}</h3>', 400
-
-    theme = get_theme()
-
-    org_campaigns = db.session.query(OrganizationCharityCampaign).filter_by(charity_campaign_id=campaign_id).all()
-
-    org_data = []
-    for org_campaign in org_campaigns:
-        org = org_campaign.organization
-
-        item_stocks = db.session.query(
-            ItemStock.item_type_id, db.func.sum(ItemStock.amount)
-        ).filter(ItemStock.organization_charity_campaign_id == org_campaign.id).group_by(ItemStock.item_type_id).all()
-
-        item_stock_data = {item_type_id: amount for item_type_id, amount in item_stocks}
-
-        affected_requests_count = db.session.query(db.func.count(Request.id)).join(Affected).filter(
-            Request.charity_campaign_id == org_campaign.id).scalar()
-
-        volunteer_tasks_count = db.session.query(db.func.count(Task.id)).join(Volunteer).filter(
-            Task.charity_campaign_id == org_campaign.id).scalar()
-
-        volunteers_count = db.session.query(db.func.count(Volunteer.id)).filter(
-            Volunteer.campaigns.any(OrganizationCharityCampaign.id == org.id)
-        ).scalar()
-
-        donations_money_count = db.session.query(db.func.count(DonationMoney.donationMoney_id)).filter(
-            DonationMoney.charity_campaign_id == org.id).scalar()
-
-        donations_item_count = db.session.query(db.func.count(DonationItem.donationItem_id)).filter(
-            DonationItem.charity_campaign_id == org.id).scalar()
-
-        org_data.append({
-            'organization': org.organization_name,
-            'item_stock_data': item_stock_data,
-            'affected_requests_count': affected_requests_count,
-            'volunteer_tasks_count': volunteer_tasks_count,
-            'volunteers_count': volunteers_count,
-            'donations_money_count': donations_money_count,
-            'donations_item_count': donations_item_count
-        })
-
-    df_org_data = pd.DataFrame(org_data)
-
-    item_stock_chart = px.bar(df_org_data.explode('item_stock_data'), x='organization', y='item_stock_data', title='Item Stock by Organization', template=theme)
-    affected_requests_chart = px.bar(df_org_data, x='organization', y='affected_requests_count', title='Affected Requests by Organization', template=theme)
-    volunteer_tasks_chart = px.bar(df_org_data, x='organization', y='volunteer_tasks_count', title='Volunteer Tasks by Organization', template=theme)
-    donations_chart = px.bar(df_org_data, x='organization', y=['donations_money_count', 'donations_item_count'], title='Donations by Organization', template=theme)
-
-    item_stock_chart_json = json.dumps(item_stock_chart, cls=PlotlyJSONEncoder)
-    affected_requests_chart_json = json.dumps(affected_requests_chart, cls=PlotlyJSONEncoder)
-    volunteer_tasks_chart_json = json.dumps(volunteer_tasks_chart, cls=PlotlyJSONEncoder)
-    donations_chart_json = json.dumps(donations_chart, cls=PlotlyJSONEncoder)
-
-    return render_template('organization_report.jinja',
-                           campaign=campaign,
-                           org_data=org_data,
-                           item_stock_chart_json=item_stock_chart_json,
-                           affected_requests_chart_json=affected_requests_chart_json,
-                           volunteer_tasks_chart_json=volunteer_tasks_chart_json,
-                           donations_chart_json=donations_chart_json,
-                           theme=theme)
 
 
 @bp.route('/organization-report-csv')

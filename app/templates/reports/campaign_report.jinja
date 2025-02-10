@@ -4,20 +4,19 @@
 
 {% block content %}
 <div class="container mb-3">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>{{ _("Organization Information") }}</h2>
-            <p><strong>{{ _("Campaign Name") }}:</strong> {{ campaign.name }}</p>
-            <p><strong>{{ _("Campaign Description") }}:</strong> {{ campaign.description }}</p>
-        </div>
+    <h2 class="my-4">{{ _("Campaign Information") }}</h2>
+    <div class="mx-4">
+        <p><strong>{{ _("Campaign Name") }}:</strong> {{ campaign.name }}</p>
+        <p><strong>{{ _("Campaign Description") }}:</strong> {{ campaign.description }}</p>
     </div>
     <hr>
-    <h2 class="my-3">{{ _("Organizations") }}</h2>
+    <h2 class="my-4">{{ _("Organizations") }}</h2>
+    {% if org_data %}
     {% for org in org_data %}
-    <div class="organization-section">
-        <h3>{{ org.organization }}</h3>
-        <p><strong>{{ _("Description") }}:</strong> {{ org.organization.description }}</p>
-        <p><strong>{{ _("Approved") }}:</strong> {{ org.organization.approved }}</p>
+    <div class="mx-4">
+        <h3>{{ org.organization_name }}</h3>
+        <p><strong>{{ _("Description") }}:</strong> {{ org.organization_description }}</p>
+        <p><strong>{{ _("Approved") }}:</strong> {{ org.organization_approved }}</p>
         <p><strong>{{ _("Affected Requests Count") }}:</strong> {{ org.affected_requests_count }}</p>
         <p><strong>{{ _("Volunteer Tasks Count") }}:</strong> {{ org.volunteer_tasks_count }}</p>
         <p><strong>{{ _("Volunteers Count") }}:</strong> {{ org.volunteers_count }}</p>
@@ -32,10 +31,14 @@
     </div>
     <hr>
     {% endfor %}
+    <h2 class="my-4">{{ _("Charts") }}</h2>
     <div class="mb-3" id="item-stock-chart"></div>
     <div class="mb-3" id="affected-requests-chart"></div>
     <div class="mb-3" id="volunteer-tasks-chart"></div>
     <div class="mb-3" id="donations-chart"></div>
+    {% else %}
+    <h3>{{ _('Not found any organizations') }}</h3>
+    {% endif %}
 </div>
 {% endblock %}
 

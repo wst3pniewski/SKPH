@@ -47,9 +47,21 @@
           </a>
         </td>
         <td>
-          <a class="btn btn-primary btn-sm" href="{{ url_for('reports.ui') }}">
-            {{ _("Reports") }}
-          </a>
+          <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ _("Reports") }}
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('reports.affected_report', campaign_id=campaign.id) }}">{{
+                  _("Affected Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.volunteer_report', campaign_id=campaign.id) }}">{{
+                  _("Volunteer Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.donors_report', campaign_id=campaign.id) }}">{{
+                  _("Donors Report") }}</a></li>
+
+            </ul>
+          </div>
         </td>
       </tr>
       {% endfor %}
@@ -88,9 +100,20 @@
           </a>
         </td>
         <td>
-          <a class="btn btn-primary btn-sm" href="{{ url_for('reports.ui') }}">
-            {{ _("Reports") }}
-          </a>
+          <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ _("Reports") }}
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('reports.affected_report', campaign_id=campaign.id) }}">{{
+                  _("Affected Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.volunteer_report', campaign_id=campaign.id) }}">{{
+                  _("Volunteer Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.donors_report', campaign_id=campaign.id) }}">{{
+                  _("Donors Report") }}</a></li>
+            </ul>
+          </div>
         </td>
       </tr>
       {% endfor %}
