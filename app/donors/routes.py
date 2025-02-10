@@ -172,8 +172,8 @@ def confirm_point(donation_item_id):
     return redirect(url_for('donors.list_donations'))
 
 
-@bp.route('/download-pdf/<int:donation_money_id>', methods=['GET'])
-def download_pdf(donation_money_id):
+@bp.route('/download-donation-money-pdf/<int:donation_money_id>', methods=['GET'])
+def download_donation_money_pdf(donation_money_id):
     donation = db.session.scalar(db.select(DonationMoney).filter(DonationMoney.donationMoney_id == donation_money_id))
     if not donation:
         flash(_l("Could not find an item with given ID."))
@@ -181,25 +181,25 @@ def download_pdf(donation_money_id):
 
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Helvetica", size=12)
 
-    pdf.set_font("Arial", 'B', 16)
+    pdf.set_font("Helvetica", 'B', 16)
     pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Helvetica", size=12)
     pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
     pdf.ln(10)
 
-    pdf.set_font("Arial", 'B', 14)
+    pdf.set_font("Helvetica", 'B', 14)
     pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
     pdf.ln(10)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Helvetica", size=12)
 
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_font("Helvetica", 'B', 12)
     pdf.cell(50, 10, txt="Field", border=1, align='C')
     pdf.cell(140, 10, txt="Details", border=1, align='C')
     pdf.ln(10)
 
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Helvetica", size=12)
     pdf.cell(50, 10, txt="Description", border=1)
     pdf.cell(140, 10, txt=donation.description, border=1)
     pdf.ln(10)
@@ -216,7 +216,64 @@ def download_pdf(donation_money_id):
     pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
     pdf.ln(10)
 
-    pdf.set_font("Arial", 'I', 10)
+    pdf.set_font("Helvetica", 'I', 10)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')
+    pdf.cell(200, 10, txt="Visit our website: www.skph.org", ln=True, align='C')
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpfile:
+        pdf_output = tmpfile.name
+        pdf.output(pdf_output)
+
+    response = send_file(pdf_output, as_attachment=True)
+    return response
+
+
+@bp.route('/download-donation-item-pdf/<int:donation_item_id>', methods=['GET'])
+def download_donation_item_pdf(donation_item_id):
+    donation = db.session.scalar(db.select(DonationItem).filter(DonationItem.donationItem_id == donation_item_id))
+    if not donation:
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 16)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.cell(50, 10, txt="Field", border=1, align='C')
+    pdf.cell(140, 10, txt="Details", border=1, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(50, 10, txt="Description", border=1)
+    pdf.cell(140, 10, txt=donation.description, border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Number", border=1)
+    pdf.cell(140, 10, txt=str(donation.amount), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Date", border=1)
+    pdf.cell(140, 10, txt=str(donation.donation_date), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Donor ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.donor_id), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Charity Campaign ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'I', 10)
     pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
     pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')
     pdf.cell(200, 10, txt="Visit our website: www.skph.org", ln=True, align='C')
