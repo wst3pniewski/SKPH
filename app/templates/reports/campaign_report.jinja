@@ -1,0 +1,60 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Organization Report") }}{% endblock %}
+
+{% block content %}
+<div class="container mb-3">
+    <h2 class="my-4">{{ _("Campaign Information") }}</h2>
+    <div class="mx-4">
+        <p><strong>{{ _("Campaign Name") }}:</strong> {{ campaign.name }}</p>
+        <p><strong>{{ _("Campaign Description") }}:</strong> {{ campaign.description }}</p>
+    </div>
+    <hr>
+    <h2 class="my-4">{{ _("Organizations") }}</h2>
+    {% if org_data %}
+    {% for org in org_data %}
+    <div class="mx-4">
+        <h3>{{ org.organization_name }}</h3>
+        <p><strong>{{ _("Description") }}:</strong> {{ org.organization_description }}</p>
+        <p><strong>{{ _("Approved") }}:</strong> {{ org.organization_approved }}</p>
+        <p><strong>{{ _("Affected Requests Count") }}:</strong> {{ org.affected_requests_count }}</p>
+        <p><strong>{{ _("Volunteer Tasks Count") }}:</strong> {{ org.volunteer_tasks_count }}</p>
+        <p><strong>{{ _("Volunteers Count") }}:</strong> {{ org.volunteers_count }}</p>
+        <p><strong>{{ _("Money Donations Count") }}:</strong> {{ org.donations_money_count }}</p>
+        <p><strong>{{ _("Item Donations Count") }}:</strong> {{ org.donations_item_count }}</p>
+        <h4>{{ _("Item Stock") }}</h4>
+        <ul>
+            {% for item_type_id, amount in org.item_stock_data.items() %}
+            <li>{{ item_type_id }}: {{ amount }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <hr>
+    {% endfor %}
+    <h2 class="my-4">{{ _("Charts") }}</h2>
+    <div class="mb-3" id="item-stock-chart"></div>
+    <div class="mb-3" id="affected-requests-chart"></div>
+    <div class="mb-3" id="volunteer-tasks-chart"></div>
+    <div class="mb-3" id="donations-chart"></div>
+    {% else %}
+    <h3>{{ _('Not found any organizations') }}</h3>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block ascript %}
+<script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+<script>
+    var item_stock_chart = {{ item_stock_chart_json | safe }};
+    Plotly.newPlot('item-stock-chart', item_stock_chart);
+
+    var affected_requests_chart = {{ affected_requests_chart_json | safe }};
+    Plotly.newPlot('affected-requests-chart', affected_requests_chart);
+
+    var volunteer_tasks_chart = {{ volunteer_tasks_chart_json | safe }};
+    Plotly.newPlot('volunteer-tasks-chart', volunteer_tasks_chart);
+
+    var donations_chart = {{ donations_chart_json | safe }};
+    Plotly.newPlot('donations-chart', donations_chart);
+</script>
+{% endblock %}

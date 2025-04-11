@@ -4,11 +4,6 @@
 
 {% block content %}
 <div class="container mt-2">
-    <br>
-    <div>
-        <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Back") }}</a>
-    </div>
-    <hr class="my-4" />
     <h3>{{ _("Tasks for") }} {{ volunteer.first_name }} {{ volunteer.last_name }}</h3>
     {% if current_user.type == 'organization' %}
     <div class="d-flex justify-content-end">
@@ -35,22 +30,34 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if task.evaluation_ %}
-                    {{ _("Score") }}: {{ task.evaluation_.score }}<br />{{ _("Description") }}: {{
-                    task.evaluation_.description }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Score") }}</th>
+                                <th>{{ _("Description") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ task.evaluation_.score }}</td>
+                                <td>{{ task.evaluation_.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     {% else %}
                     <a href="{{ url_for('organization.eval_task', charity_campaign_id=task.charity_campaign_id, task_id=task.id) }}"
-                        class="btn btn-primary {% if task.status != 'completed' %}disabled{% endif %}">{{
-                        _("Evaluate")
-                        }}</a>
+                        class="btn btn-primary {% if task.status != 'completed' %}disabled{% endif %}">
+                        {{ _("Evaluate") }}
+                    </a>
                     {% endif %}
                 </td>
             </tr>
@@ -75,11 +82,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>

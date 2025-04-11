@@ -14,40 +14,40 @@
       <li class="list-group-item"><strong>{{ _("First Name:") }}</strong> {{ affected.first_name }}</li>
       <li class="list-group-item"><strong>{{ _("Last Name:") }}</strong> {{ affected.last_name }}</li>
       <li class="list-group-item"><strong>{{ _("Needs:") }}</strong> {{ affected.needs }}</li>
-      <li class="list-group-item"><strong>{{ _("Address:") }}</strong> {{ affected.address.street }} {{ affected.address.street_number }},
-          {{ affected.address.city }}, {{ affected.address.voivodeship }}</li>
-      <li class="list-group-item"><strong>{{ _("Campaign:") }}</strong> {{ affected.campaign.name }}</li>
+      <li class="list-group-item"><strong>{{ _("Address:") }}</strong> {{ affected.address.street }} {{
+        affected.address.street_number }},
+        {{ affected.address.city }}, {{ affected.address.voivodeship }}</li>
     </ul>
   </section>
 
   <section class="mt-4">
     <h2>{{ _("Requests") }}</h2>
     {% if requests %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>{{ _("Request Name") }}</th>
-                    <th>{{ _("Status") }}</th>
-                    <th>{{ _("Needs") }}</th>
-                    <th>{{ _("Amount") }}</th>
-                    <th>{{ _("Address") }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for request in requests %}
-                    <tr>
-                        <td>{{ request.name }}</td>
-                        <td>{{ request.status.value }}</td>
-                        <td>{{ request.donation_type.type }}</td>
-                        <td>{{ request.amount }}</td>
-                        <td>{{ request.req_address.street }} {{ request.req_address.street_number }},
-                            {{ request.req_address.city }}, {{ request.req_address.voivodeship }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>{{ _("Request Name") }}</th>
+          <th>{{ _("Status") }}</th>
+          <th>{{ _("Needs") }}</th>
+          <th>{{ _("Amount") }}</th>
+          <th>{{ _("Address") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for request in requests %}
+        <tr>
+          <td>{{ request.name }}</td>
+          <td>{{ request.status.value }}</td>
+          <td>{{ request.donation_type.type }}</td>
+          <td>{{ request.amount }}</td>
+          <td>{{ request.address.street }} {{ request.address.street_number }},
+            {{ request.address.city }}, {{ request.address.voivodeship }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     {% else %}
-        <p class="text-muted">{{ _("No requests found.") }}</p>
+    <p class="text-muted">{{ _("No requests found.") }}</p>
     {% endif %}
   </section>
 </div>

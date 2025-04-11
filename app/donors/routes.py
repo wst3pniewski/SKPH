@@ -1,16 +1,25 @@
+import tempfile
 from datetime import date
 
 from flask import (Blueprint, abort, flash, redirect, render_template,
-                   url_for, request)
+                   send_file, url_for)
+
+from flask_babel import lazy_gettext as _l
+
 from flask_login import current_user
+from fpdf import FPDF
+
 from app.auth.user_service import roles_required
 from app.extensions import db
+from app.forms.donations_wtf import CreateDonationForm
 from app.models.address import Address
 from app.models.authorities import Authorities
-from app.models.charity_campaign import OrganizationCharityCampaign, CharityCampaign
+from app.models.charity_campaign import (CharityCampaign,
+                                         OrganizationCharityCampaign)
 from app.models.donation import DonationItem, DonationMoney, DonationType
 from app.models.donor import Donor
 from app.models.item_stock import ItemStock
+from app.models.notification import Notification, NotificationType
 from app.models.organization import Organization
 
 bp = Blueprint('donors', __name__,
@@ -25,7 +34,7 @@ def index():
     return render_template('donors.jinja', samples_added=samples_added)
 
 
-@bp.route('donor/profile')
+@bp.route('/donor/profile')
 @roles_required(['donor'])
 def donor_profile():
     donor = db.session.get(Donor, current_user.donor.donor_id)
@@ -39,96 +48,107 @@ def fetch_donors():
     return render_template('donor_view.jinja', donors=donors.all())
 
 
-# TODO: Link the donation to a specific charity campaign
-
-
 @bp.route('/donation/create', methods=['GET', 'POST'])
 @roles_required(['donor'])
 def create_donation():
-    donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
-    charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
-    donation_type = db.session.scalars(db.select(DonationType)).all()
-    if request.method == 'POST':
-        description = request.form['description']
-        type_d = request.form['donation_type']
-        charity_campaign = request.form['organization_charity_campaign_id']
-        amount = request.form['amount']
-        if type_d == 'money':
+    form = CreateDonationForm()
+    form.donation_type.choices = [(item.id, _l(item.type)) for item in db.session.scalars(db.select(DonationType)).all()]
+    form.organization_charity_campaign_id.choices = [(campaign.id, f"{campaign.charity_campaign.name} ({campaign.organization.organization_name})") for campaign in db.session.scalars(db.select(OrganizationCharityCampaign)).all()]
+
+    if form.validate_on_submit():
+        description = form.description.data
+        donation_type = form.donation_type.data
+        charity_campaign_id = form.organization_charity_campaign_id.data
+        amount = form.amount.data
+
+        donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
+        charity_campaign = OrganizationCharityCampaign.query.get(charity_campaign_id)
+        money_type = DonationType.query.filter(DonationType.type == 'Money').scalar()
+
+        if donation_type == money_type.id:
             new_donation_money = DonationMoney(
                 description=description,
                 donation_date=date.today(),
-                donation_type="Money",
+                donation_type=money_type,
                 cashAmount=amount,
-                donor_id=donor.donor_id,
-                charity_campaign_id=charity_campaign
+                donor=donor,
+                charity_campaign_id=charity_campaign_id
             )
+
+            new_notification = Notification(
+                user_id=charity_campaign.organization.user_id,
+                message=f"{donor.first_name} {donor.last_name}: {description}",
+                type=NotificationType.DONATION
+            )
+
+            charity_campaign.donations_money.append(new_donation_money)
             db.session.add(new_donation_money)
-            money_type = DonationType.query.filter(DonationType.type == 'Money').first()
-            if money_type is None:
-                money_type = DonationMoney(type='Money')
+            db.session.add(new_notification)
 
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
-                .filter(ItemStock.organization_charity_campaign_id == charity_campaign, DonationType.type == 'Money') \
+                .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id, DonationType.type == 'Money') \
                 .first()
 
             if curr_stock is None:
                 new_stock = ItemStock(item_type=money_type,
-                                      organization_charity_campaign_id=charity_campaign,
+                                      organization_charity_campaign_id=charity_campaign_id,
                                       amount=amount)
                 db.session.add(new_stock)
-
             else:
                 curr_stock.amount += float(amount)
                 db.session.add(curr_stock)
 
             db.session.commit()
-            flash('Donation created successfully')
-            del new_donation_money
+            flash(_l('Donation created successfully'))
         else:
             new_donation_item = DonationItem(
                 description=description,
                 donation_date=date.today(),
-                donation_type_id=type_d,
+                donation_type_id=donation_type,
                 amount=amount,
                 donor_id=donor.donor_id,
-                charity_campaign_id=charity_campaign
+                charity_campaign_id=charity_campaign_id
             )
+
+            new_notification = Notification(
+                user_id=charity_campaign.organization.user_id,
+                message=f"{donor.first_name} {donor.last_name}: {description}",
+                type=NotificationType.DONATION
+            )
+
+            db.session.add(new_notification)
             db.session.add(new_donation_item)
             curr_stock = ItemStock.query.join(DonationType, ItemStock.item_type_id == DonationType.id) \
-                .filter(ItemStock.organization_charity_campaign_id == charity_campaign,
-                        DonationType.id == type_d) \
+                .filter(ItemStock.organization_charity_campaign_id == charity_campaign_id,
+                        DonationType.id == donation_type) \
                 .first()
             if curr_stock is None:
-                new_stock = ItemStock(item_type_id=type_d,
-                                      organization_charity_campaign_id=charity_campaign,
+                new_stock = ItemStock(item_type_id=donation_type,
+                                      organization_charity_campaign_id=charity_campaign_id,
                                       amount=amount)
                 db.session.add(new_stock)
-
             else:
                 curr_stock.amount += float(amount)
                 db.session.add(curr_stock)
 
             db.session.commit()
-            flash('Donation created successfully')
-            del new_donation_item
+            flash(_l('Donation created successfully'))
 
-        return redirect(url_for('donors.index', donor_id=donor.donor_id))
-    return render_template('create_donation.jinja',
-                           charity_campaigns=charity_campaigns,
-                           ItemDonationType=donation_type)
+        return redirect(url_for('home', donor_id=donor.donor_id))
+    return render_template('create_donation.jinja', form=form)
 
 
 @bp.route('/donations')
 @roles_required(['donor', 'organization', 'authorities'])
 def list_donations():
-    donor = db.session.scalar(db.select(Donor).where(Donor.donor_id == current_user.donor.donor_id))
+    donor = Donor.query.filter(Donor.user_id == current_user.id).first()
     if current_user.type == 'donor':
         if current_user.donor.donor_id != donor.donor_id:
             return abort(403)
 
     donor = db.session.get(Donor, donor.donor_id)
     if Donor is None:
-        return 'Donor not found', 404
+        return abort(404)
 
     donations_money = db.session.scalars(
         db.select(DonationMoney).where(DonationMoney.donor_id == donor.donor_id)
@@ -145,29 +165,132 @@ def list_donations():
 def confirm_point(donation_item_id):
     donation = db.session.scalar(db.select(DonationItem).filter(DonationItem.donationItem_id == donation_item_id))
     if not donation:
-        flash("Nie znaleziono przedmiotu o podanym ID.")
-        return redirect('/')
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
 
     flash(str(donation.return_confirmation()))
-    return redirect('/donors/donations')
+    return redirect(url_for('donors.list_donations'))
 
 
-@bp.route('/confirmMoney/<int:id>', methods=['POST'])
-def confirm_money(donation_money_id):
+@bp.route('/download-donation-money-pdf/<int:donation_money_id>', methods=['GET'])
+def download_donation_money_pdf(donation_money_id):
     donation = db.session.scalar(db.select(DonationMoney).filter(DonationMoney.donationMoney_id == donation_money_id))
     if not donation:
-        flash("Nie znaleziono przedmiotu o podanym ID.")
-        return redirect('/')
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
 
-    flash(str(donation.return_confirmation()))
-    return redirect('/donors/donations')
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 16)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.cell(50, 10, txt="Field", border=1, align='C')
+    pdf.cell(140, 10, txt="Details", border=1, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(50, 10, txt="Description", border=1)
+    pdf.cell(140, 10, txt=donation.description, border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Amount", border=1)
+    pdf.cell(140, 10, txt=str(donation.cashAmount), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Date", border=1)
+    pdf.cell(140, 10, txt=str(donation.donation_date), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Donor ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.donor_id), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Charity Campaign ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'I', 10)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')
+    pdf.cell(200, 10, txt="Visit our website: www.skph.org", ln=True, align='C')
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpfile:
+        pdf_output = tmpfile.name
+        pdf.output(pdf_output)
+
+    response = send_file(pdf_output, as_attachment=True)
+    return response
+
+
+@bp.route('/download-donation-item-pdf/<int:donation_item_id>', methods=['GET'])
+def download_donation_item_pdf(donation_item_id):
+    donation = db.session.scalar(db.select(DonationItem).filter(DonationItem.donationItem_id == donation_item_id))
+    if not donation:
+        flash(_l("Could not find an item with given ID."))
+        return redirect(url_for('home'))
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 16)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(200, 10, txt="Thank you for your generous donation!", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(200, 10, txt="Donation Confirmation", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Helvetica", size=12)
+
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.cell(50, 10, txt="Field", border=1, align='C')
+    pdf.cell(140, 10, txt="Details", border=1, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(50, 10, txt="Description", border=1)
+    pdf.cell(140, 10, txt=donation.description, border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Number", border=1)
+    pdf.cell(140, 10, txt=str(donation.amount), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Date", border=1)
+    pdf.cell(140, 10, txt=str(donation.donation_date), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Donor ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.donor_id), border=1)
+    pdf.ln(10)
+    pdf.cell(50, 10, txt="Charity Campaign ID", border=1)
+    pdf.cell(140, 10, txt=str(donation.charity_campaign_id), border=1)
+    pdf.ln(10)
+
+    pdf.set_font("Helvetica", 'I', 10)
+    pdf.cell(200, 10, txt="SKPH - Crisis Management System", ln=True, align='C')
+    pdf.cell(200, 10, txt="Contact us at: support@skph.org", ln=True, align='C')
+    pdf.cell(200, 10, txt="Visit our website: www.skph.org", ln=True, align='C')
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpfile:
+        pdf_output = tmpfile.name
+        pdf.output(pdf_output)
+
+    response = send_file(pdf_output, as_attachment=True)
+    return response
 
 
 @bp.route('/samples', methods=['POST'])
 def donor_samples():
     new_donor = Donor(
-        name="John",
-        surname="Doe",
+        first_name="John",
+        last_name="Doe",
         phone_number="123456789",
         email="john.doe@example.com",
         user_id=current_user.id

@@ -5,13 +5,6 @@
 
 {% block content %}
 <div class="container mt-2">
-    {% if referrer %}
-    <br>
-    <div>
-        <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Back") }}</a>
-    </div>
-    <hr class="my-4" />
-    {% endif %}
     <section>
         <h2>{{ _("Charity Campaign Informations") }}</h2>
         <ul class="list-group">
@@ -27,9 +20,9 @@
             <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ campaign.authority.phone }}</li>
             <li class="list-group-item"><strong>{{ _("Status:") }}</strong>
                 {% if campaign.authority.approved %}
-                <span class="badge badge-success">{{ _("Approved") }}</span>
+                <span class="badge text-bg-success">{{ _("Approved") }}</span>
                 {% else %}
-                <span class="badge badge-warning">{{ _("Not approved") }}</span>
+                <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
                 {% endif %}
             </li>
             <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{

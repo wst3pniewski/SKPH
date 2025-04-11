@@ -24,3 +24,9 @@ htmlcov/
 
 # Babel
 *.mo
+
+# Uploads
+app/static/uploads/
+
+# Logs
+logs/

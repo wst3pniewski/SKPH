@@ -5,10 +5,9 @@
 {% block content %}
 <div class="container mt-4">
         <h1>{{ _("All Requests") }}</h1>
-        <table class="table">
+        <table class="table table-bordered">
                 <thead>
                         <tr>
-                                <th>{{ _("ID") }}</th>
                                 <th>{{ _("Name") }}</th>
                                 <th>{{ _("Status") }}</th>
                                 <th>{{ _("Affected") }}</th>
@@ -25,17 +24,16 @@
                 <tbody>
                         {% for request in requests %}
                         <tr>
-                                <td>{{ request.id }}</td>
                                 <td>{{ request.name }}</td>
                                 <td>{{ _(request.status.value) }}</td>
                                 <td>{{ request.affected.first_name }} {{ request.affected.last_name }}</td>
                                 <td>{{ request.donation_type.type }}</td>
                                 <td>{{ request.amount }}</td>
-                                <td>{{ request.req_address_id }}</td>
-                                <td>{{ request.req_address.street }}</td>
-                                <td>{{ request.req_address.street_number }}</td>
-                                <td>{{ request.req_address.city }}</td>
-                                <td>{{ request.req_address.voivodeship }}</td>
+                                <td>{{ request.address_id }}</td>
+                                <td>{{ request.address.street }}</td>
+                                <td>{{ request.address.street_number }}</td>
+                                <td>{{ request.address.city }}</td>
+                                <td>{{ request.address.voivodeship }}</td>
                                 <td>
                                         <a href="{{ url_for('affected.update_request_status', request_id=request.id) }}"
                                                 class="btn btn-primary">

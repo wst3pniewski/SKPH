@@ -1,0 +1,29 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Setup Profile Picture") }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ _("Setup Profile Picture") }}</h1>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-3">
+                {% if current_user.profile_picture %}
+                <img id="profilePicture"
+                    src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
+                    height="250" width="250" class="rounded-circle mb-3" alt="Profile Picture">
+                {% endif %}
+                <form id="uploadProfilePictureForm" action="{{ url_for('auth.setup_profile_picture') }}" method="post"
+                    enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">{{ _("Choose a profile picture") }}</label>
+                        <input class="form-control" type="file" id="file" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-secondary">{{ _("Discard") }}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,21 +1,37 @@
+import logging
 import os
-from flask import Flask, render_template, request, redirect
+from logging.handlers import RotatingFileHandler
+
+from flask import Flask, redirect, render_template, request
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.affected.routes import bp as affected_bp
+from app.affected.routes import initialize_donation_types
 from app.auth.routes import bp as auth_bp
 from app.auth.user_service import init_login_manager
 from app.communication.routes import bp as chat_bp
 from app.communication.socketio_chat import socketio
 from app.donors.routes import bp as donors_bp
-from app.extensions import babel, db, get_locale, mail
+from app.extensions import babel, csrf, db, get_locale, hcaptcha, mail, migrate
 from app.maps.routes import bp as maps_bp
+from app.notifications.routes import bp as notifications_bp
 from app.organization.routes import bp as organization_bp
 from app.reports.routes import bp as reports_bp
-from app.volunteers.routes import bp as volunteers_bp
 from app.supply_chain.routes import bp as supply_chain_bp
+from app.volunteers.routes import bp as volunteers_bp
 from config import config
+
+# Create logs directory if it doesn't exist
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Set up logging
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
 
 
 def create_app(config_name=None):
@@ -30,9 +46,19 @@ def create_app(config_name=None):
     init_login_manager(flask_app)
     mail.init_app(flask_app)
     socketio.init_app(flask_app)
+    csrf.init_app(flask_app)
+    migrate.init_app(flask_app, db)
+    hcaptcha.init_app(flask_app)
+
+    # Logging
+    flask_app.logger.addHandler(file_handler)
+    flask_app.logger.setLevel(logging.INFO)
+    flask_app.logger.info('Application startup')
 
     with flask_app.app_context():
+        # db.drop_all()
         db.create_all()
+        initialize_donation_types()
 
     # Register blueprints here
     flask_app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -53,7 +79,10 @@ def create_app(config_name=None):
 
     flask_app.register_blueprint(supply_chain_bp, url_prefix='/supply-chain')
 
+    flask_app.register_blueprint(notifications_bp, url_prefix='/notifications')
+
     @flask_app.route('/set_language', methods=['POST'])
+    @csrf.exempt
     def set_language():
         lang = request.form.get('lang')
         response = redirect(request.referrer)

@@ -2,13 +2,11 @@
 
 {% block title %}{{ _("Donor's donations") }}{% endblock %}
 
+{% set referrer = url_for('home') %}
+
 {% block content %}
 <div class="container mt-2">
-  <div>
-  <a href="{{ url_for('donors.index') }}" class="btn btn-secondary">Back</a>
-  </div>
-  <hr class="my-4" />
-  <h2>{{ _("My Donations") }} {# {{ donor.name }} {{ donor.surname }} #}</h2>
+  <h2>{{ _("Your Donations") }}</h2>
   <hr class="my-4" />
   <h3>{{ _("Money Donations") }}</h3>
   <table class="table table-hover">
@@ -25,14 +23,14 @@
         <td>{{ donation.description }}</td>
         <td>{{ donation.cashAmount }}</td>
         <td>
-            <form action="/donors/confirmMoney/{{ donation.donationMoney_id }}" method="post" class="d-flex w-100">
-            <button class="btn btn-primary w-100">{{ _("Confirmation") }}</button>
-            </form>
+          <a href="{{ url_for('donors.download_donation_money_pdf', donation_money_id=donation.donationMoney_id) }}"
+            class="btn btn-secondary">
+            {{ _("Download PDF") }}
+          </a>
         </td>
       </tr>
       {% endfor %}
   </table>
-  <a class="btn btn-primary w-100 mb-2" href="#">{{ _("Generate Tax Report") }}</a>
   <br>
   <h3>{{ _("Item Donations") }}</h3>
   <table class="table table-hover">
@@ -51,10 +49,10 @@
         <td>{{ donation.donation_type_id }}</td>
         <td>{{ donation.amount }}</td>
         <td>
-             <form action="/donors/confirm/{{ donation.donationItem_id }}" method="post" class="d-flex w-100">
-        <button class="btn btn-primary w-100">{{ _("Confirmation") }}</button>
-      </form>
-
+          <a href="{{ url_for('donors.download_donation_item_pdf', donation_item_id=donation.donationItem_id) }}"
+            class="btn btn-secondary">
+            {{ _("Download PDF") }}
+          </a>
         </td>
       </tr>
       {% endfor %}

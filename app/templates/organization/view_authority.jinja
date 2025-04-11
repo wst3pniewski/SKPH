@@ -3,27 +3,30 @@
 {% block title %}{{ _("Authorities Information") }}{% endblock %}
 
 {% block content %}
-<div class="container mt-2">
+<div class="container my-4 d-flex justify-content-center">
     <section>
-        <h2>{{ _("Authorities Information") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ authority.name }}</li>
-            <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ authority.phone }}</li>
-            <li class="list-group-item"><strong>{{ _("Status:") }}</strong>
-                {% if authority.approved %}
-                <span class="badge badge-success">{{ _("Approved") }}</span>
-                {% else %}
-                <span class="badge badge-warning">{{ _("Not approved") }}</span>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{
-                authority.address.voivodeship }}
-            <li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ authority.address.city }}</li>
-            <li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ authority.address.street }}</li>
-            <li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
-                {{ authority.address.street_number }}
-            </li>
-        </ul>
+        <h2 class="text-center">{{ _("Authorities Information") }}</h2>
+        <div class="card" style="width: 30rem;">
+            <img src="{{ url_for('static', filename='uploads/' ~ (authority.user.profile_picture or 'base_profile_picture.jpg')) }}"
+                alt="Profile Picture" class="rounded-circle mx-auto d-block mt-3" width="120" height="120">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ authority.name }}</h5>
+                <p class="card-text"><strong>{{ _("Email:") }}</strong> {{ authority.user.email }}</p>
+                <p class="card-text"><strong>{{ _("Phone:") }}</strong> {{ authority.phone }}</p>
+                <p class="card-text"><strong>{{ _("Status:") }}</strong>
+                    {% if authority.approved %}
+                    <span class="badge text-bg-success">{{ _("Approved") }}</span>
+                    {% else %}
+                    <span class="badge text-bg-warning">{{ _("Not approved") }}</span>
+                    {% endif %}
+                </p>
+                <p class="card-text"><strong>{{ _("Voivodeship:") }}</strong> {{ authority.address.voivodeship }}</p>
+                <p class="card-text"><strong>{{ _("City:") }}</strong> {{ authority.address.city }}</p>
+                <p class="card-text"><strong>{{ _("Street:") }}</strong> {{ authority.address.street }}</p>
+                <p class="card-text"><strong>{{ _("Street number:") }}</strong> {{ authority.address.street_number }}
+                </p>
+            </div>
+        </div>
     </section>
 </div>
 {% endblock %}

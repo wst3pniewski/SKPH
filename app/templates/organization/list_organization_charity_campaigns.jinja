@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container mt-2">
   <h1>{{ _("Organization Charity Campaigns") }}</h1>
+  {% if current_user.is_authenticated %}
   {% if current_user.type in 'organization' %}
   <table class="table table-hover table-bordered">
     <thead>
@@ -12,6 +13,7 @@
         <th scope="col">{{ _("Organization Name") }}</th>
         <th scope="col">{{ _("Charity Campaign") }}</th>
         <th scope="col">{{ _("Volunteers") }}</th>
+        <th scope="col">{{ _("Need Requests") }}</th>
         <th scope="col">{{ _("Create Task") }}</th>
         <th scope="col">{{ _("View Reports") }}</th>
       </tr>
@@ -33,15 +35,33 @@
           </a>
         </td>
         <td>
+          <a href="{{ url_for('affected.requests_for_org_charity_campaign', organization_charity_campaign_id=campaign.id) }}"
+            class="btn btn-primary btn-sm">
+            {{ _("View Requests") }}
+          </a>
+        </td>
+        <td>
           <a class="btn btn-primary btn-sm"
             href="{{ url_for('organization.create_task', organization_charity_campaign_id=campaign.id) }}">
             {{ _("Create Task") }}
           </a>
         </td>
         <td>
-          <a class="btn btn-primary btn-sm" href="{{ url_for('reports.ui') }}">
-            {{ _("Reports") }}
-          </a>
+          <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ _("Reports") }}
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('reports.affected_report', campaign_id=campaign.id) }}">{{
+                  _("Affected Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.volunteer_report', campaign_id=campaign.id) }}">{{
+                  _("Volunteer Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.donors_report', campaign_id=campaign.id) }}">{{
+                  _("Donors Report") }}</a></li>
+
+            </ul>
+          </div>
         </td>
       </tr>
       {% endfor %}
@@ -53,6 +73,7 @@
         <th scope="col">{{ _("Organization Name") }}</th>
         <th scope="col">{{ _("Charity Campaign") }}</th>
         <th scope="col">{{ _("Volunteers") }}</th>
+        <th scope="col">{{ _("Need Requests") }}</th>
         <th scope="col">{{ _("View Reports") }}</th>
       </tr>
     </thead>
@@ -73,9 +94,26 @@
           </a>
         </td>
         <td>
-          <a class="btn btn-primary btn-sm" href="{{ url_for('reports.ui') }}">
-            {{ _("Reports") }}
+          <a href="{{ url_for('affected.requests_for_org_charity_campaign', organization_charity_campaign_id=campaign.id) }}"
+            class="btn btn-primary btn-sm">
+            {{ _("View Requests") }}
           </a>
+        </td>
+        <td>
+          <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ _("Reports") }}
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('reports.affected_report', campaign_id=campaign.id) }}">{{
+                  _("Affected Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.volunteer_report', campaign_id=campaign.id) }}">{{
+                  _("Volunteer Report") }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('reports.donors_report', campaign_id=campaign.id) }}">{{
+                  _("Donors Report") }}</a></li>
+            </ul>
+          </div>
         </td>
       </tr>
       {% endfor %}
@@ -101,6 +139,7 @@
       </tr>
       {% endfor %}
   </table>
+  {% endif %}
   {% endif %}
 </div>
 {% endblock %}

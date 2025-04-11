@@ -1,10 +1,16 @@
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
-                   url_for)
+                   session, url_for)
 from flask_babel import gettext as _
 from flask_login import current_user
+from sqlalchemy.orm import joinedload
 
 from app.auth.user_service import roles_required
 from app.extensions import db
+from app.forms.charity_campaigns_wtf import (CharityCampaignForm,
+                                             ManageCharityCampaignForm,
+                                             SignToCharityCampaignForm)
+from app.forms.tasks_wtf import CreateTaskForm, EvaluateTaskForm
+from app.forms.volunteers_wtf import VolunteerSignToCharityCampaignForm
 from app.models.address import Address
 from app.models.authorities import Authorities
 from app.models.charity_campaign import (CharityCampaign,
@@ -24,30 +30,37 @@ def index():
 
 # =================== CHARITY CAMPAIGNS ===================
 
-@bp.route('/charity_campaigns')
+@bp.route('/charity-campaigns')
 def list_charity_campaigns():
-    charity_campaigns = db.session.scalars(db.select(CharityCampaign)).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    pagination = db.paginate(db.select(CharityCampaign), page=page, per_page=per_page, error_out=False)
     return render_template('list_all_charity_campaigns.jinja',
-                           charity_campaigns=charity_campaigns)
+                           charity_campaigns=pagination.items,
+                           pagination=pagination)
 
 
-@bp.route('/organizations_charity_campaigns')
+@bp.route('/organizations-charity-campaigns')
 def list_organization_charity_campaigns():
     organization_charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
     return render_template('list_organization_charity_campaigns.jinja',
                            organization_charity_campaigns=organization_charity_campaigns)
 
 
-@bp.route('charity_campaigns/<int:charity_campaign_id>')
+@bp.route('charity-campaigns/<int:charity_campaign_id>')
 def list_signed_organizations(charity_campaign_id):
+    if 'original_referrer' not in session:
+        session['original_referrer'] = request.referrer
     organization_charity_campaigns = (
         db.session.scalars(db.select(OrganizationCharityCampaign)
                            .where(OrganizationCharityCampaign.charity_campaign_id == charity_campaign_id)))
+    original_referrer = session.get('original_referrer')
     return render_template('list_organization_charity_campaigns.jinja',
-                           organization_charity_campaigns=organization_charity_campaigns)
+                           organization_charity_campaigns=organization_charity_campaigns,
+                           referrer=original_referrer)
 
 
-@bp.route('charity_campaign/<int:charity_campaign_id>')
+@bp.route('charity-campaign/<int:charity_campaign_id>')
 def view_campaign(charity_campaign_id):
     campaign = db.session.get(CharityCampaign, charity_campaign_id)
     referrer = request.referrer
@@ -56,7 +69,7 @@ def view_campaign(charity_campaign_id):
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/volunteers')
+@bp.route('/charity-campaign/<int:charity_campaign_id>/volunteers')
 @roles_required(['organization', 'authorities'])
 def manage_volunteers(charity_campaign_id):
     campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -71,7 +84,7 @@ def manage_volunteers(charity_campaign_id):
                            referrer=referrer)
 
 
-@bp.route('/authorities/charity_campaign/<int:charity_campaign_id>/volunteers')
+@bp.route('/authorities/charity-campaign/<int:charity_campaign_id>/volunteers')
 @roles_required(['authorities'])
 def list_volunteers(charity_campaign_id):
     campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -84,7 +97,7 @@ def list_volunteers(charity_campaign_id):
 # =================== AUTHORITIES ===================
 
 
-@bp.route('authorities/profile')
+@bp.route('/authorities/profile')
 @roles_required(['authorities'])
 def authorities_profile():
     authorities = db.session.get(Authorities, current_user.authorities.id)
@@ -95,11 +108,13 @@ def authorities_profile():
 @bp.route('/authorities/<int:authorities_id>')
 def view_authorities(authorities_id):
     authority = db.session.get(Authorities, authorities_id)
+    referrer = request.referrer
     return render_template('view_authority.jinja',
-                           authority=authority)
+                           authority=authority,
+                           referrer=referrer)
 
 
-@bp.route('authorities/<int:authorities_id>/charity_campaigns')
+@bp.route('/authorities/<int:authorities_id>/charity-campaigns')
 @roles_required(['authorities'])
 def list_authorities_charity_campaigns(authorities_id):
     if current_user.type == 'authorities':
@@ -111,47 +126,40 @@ def list_authorities_charity_campaigns(authorities_id):
                            charity_campaigns=charity_campaigns)
 
 
-@bp.route('charity_campaign/manage/<int:charity_campaign_id>', methods=['GET', 'POST'])
+@bp.route('charity-campaign/manage/<int:charity_campaign_id>', methods=['GET', 'POST'])
 @roles_required(['authorities'])
 def manage_charity_campaign(charity_campaign_id):
     charity_campaign = db.session.get(CharityCampaign, charity_campaign_id)
     if current_user.authorities.id == charity_campaign.authorities_id:
-        if request.method == 'POST':
-            name = request.form['name']
-            description = request.form['description']
-            is_active = request.form.get('is_active') == 'true'
-
-            charity_campaign.name = name
-            charity_campaign.description = description
-            charity_campaign.is_active = is_active
-
-            db.session.add(charity_campaign)
+        form = ManageCharityCampaignForm(obj=charity_campaign)
+        if form.validate_on_submit():
+            form.populate_obj(charity_campaign)
             db.session.commit()
             return redirect(url_for('organization.list_authorities_charity_campaigns',
                                     authorities_id=current_user.authorities.id))
-        return render_template('manage_charity_campaign.jinja',
-                               campaign=charity_campaign)
+        return render_template('manage_charity_campaign.jinja', form=form, campaign=charity_campaign)
     else:
         return abort(403)
 
 
-@bp.route('/create_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/create-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['authorities'])
 def create_charity_campaign():
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
+    form = CharityCampaignForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
         authority = db.session.scalar(db.select(Authorities).where(Authorities.user_id == current_user.id))
         new_campaign = CharityCampaign(name=name, description=description, authority=authority)
         db.session.add(new_campaign)
         db.session.commit()
         return redirect(url_for('organization.list_charity_campaigns'))
-    return render_template('create_charity_campaign.jinja')
+    return render_template('create_charity_campaign.jinja', form=form)
 
 # =================== ORGANIZATIONS ===================
 
 
-@bp.route('organization/profile')
+@bp.route('/organization/profile')
 @roles_required(['organization'])
 def organization_profile():
     organization = db.session.get(Organization, current_user.organization.id)
@@ -159,7 +167,7 @@ def organization_profile():
                            organization=organization)
 
 
-@bp.route('organization/<int:organization_id>/profile')
+@bp.route('/organization/<int:organization_id>/profile')
 @roles_required(['organization'])
 def selected_organization_profile(organization_id):
     organization = db.session.get(Organization, organization_id)
@@ -169,19 +177,24 @@ def selected_organization_profile(organization_id):
 
 @bp.route('/organizations')
 def list_organizations():
-    organizations = db.session.scalars(db.select(Organization)).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    pagination = db.paginate(db.select(Organization), page=page, per_page=per_page, error_out=False)
     return render_template('list_organizations.jinja',
-                           organizations=organizations)
+                           organizations=pagination.items,
+                           pagination=pagination)
 
 
-@bp.route('organization/<int:organization_id>')
+@bp.route('/organization/<int:organization_id>')
 def view_organization(organization_id):
-    o1 = db.session.get(Organization, organization_id)
+    organization = db.session.get(Organization, organization_id)
+    referrer = request.referrer
     return render_template('view_organization.jinja',
-                           organization=o1)
+                           organization=organization,
+                           referrer=referrer)
 
 
-@bp.route('/organization_charity_campaigns')
+@bp.route('/organization-charity-campaigns')
 def list_my_charity_campaigns():
     organization_charity_campaigns = (
         db.session.scalars(db.select(OrganizationCharityCampaign)
@@ -190,63 +203,76 @@ def list_my_charity_campaigns():
                            organization_charity_campaigns=organization_charity_campaigns)
 
 
-@bp.route('/sign_to_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/sign-to-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def sign_to_charity_campaign():
+    form = SignToCharityCampaignForm()
     organization = db.session.scalar(db.select(Organization)
-                                     .where(Organization.user_id == current_user.organization.id))
-    if request.method == 'POST':
-        charity_campaign_id = request.form['charity_campaign_id']
+                                     .where(Organization.user_id == current_user.id))
+    stmt = db.select(CharityCampaign).options(joinedload(CharityCampaign.organizations))
+    charity_campaigns = db.session.scalars(stmt).unique().all()
+    form.charity_campaign_id.choices = [
+        (campaign.id, campaign.name) for campaign in charity_campaigns if organization not in campaign.organizations
+    ]
+
+    if form.validate_on_submit():
+        charity_campaign_id = form.charity_campaign_id.data
         charity_campaign = db.session.get(CharityCampaign, charity_campaign_id)
         new_organization_campaign = OrganizationCharityCampaign(organization=organization,
                                                                 charity_campaign=charity_campaign)
         charity_campaign.organizations.append(organization)
-
         db.session.add(new_organization_campaign)
         db.session.commit()
         return redirect(url_for('organization.list_organization_charity_campaigns'))
-    charity_campaigns = db.session.scalars(db.select(CharityCampaign)).all()
-    charity_campaigns = [campaign for campaign in charity_campaigns if organization not in campaign.organizations]
-    return render_template('sign_to_charity_campaign.jinja',
-                           charity_campaigns=charity_campaigns)
+
+    return render_template('sign_to_charity_campaign.jinja', form=form)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/tasks/create', methods=['GET', 'POST'])
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/tasks/create', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def create_task(organization_charity_campaign_id):
     organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
     organization = db.session.get(Organization, current_user.organization.id)
     if organization.id != organization_campaign.organization_id:
         return abort(403)
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
-        volunteer_id = request.form['volunteer_id']
+
+    form = CreateTaskForm()
+    form.volunteer_id.choices = [(volunteer.id, f"{volunteer.first_name} {volunteer.last_name}") for volunteer in organization_campaign.volunteers]
+
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
+        volunteer_id = form.volunteer_id.data
         new_task = Task(name=name, description=description,
                         volunteer_id=volunteer_id, charity_campaign_id=organization_charity_campaign_id)
         db.session.add(new_task)
         db.session.commit()
-        flash('Task create successfully!')
+        flash(_('Task created successfully!'))
         return redirect(url_for('organization.list_my_charity_campaigns'))
+
     referrer = request.referrer or url_for('organization.list_my_charity_campaigns')
     return render_template('create_task_campaign.jinja',
+                           form=form,
                            volunteers=organization_campaign.volunteers,
                            campaign=organization_campaign,
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/tasks/create',
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/tasks/create',
           methods=['GET', 'POST'])
 @roles_required(['organization'])
 def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_id):
-    if request.method == 'POST':
-        name = request.form['name']
-        description = request.form['description']
+    form = CreateTaskForm()
+    form.volunteer_id.choices = [(volunteer_id, volunteer_id)]  # Only one choice for specific volunteer
+
+    if form.validate_on_submit():
+        name = form.name.data
+        description = form.description.data
         new_task = Task(name=name, description=description,
                         volunteer_id=volunteer_id, charity_campaign_id=organization_charity_campaign_id)
         db.session.add(new_task)
         db.session.commit()
-        flash('Task create successfully!')
+        flash(_('Task created successfully!'))
         return redirect(url_for('organization.view_volunteer_tasks',
                                 charity_campaign_id=organization_charity_campaign_id,
                                 volunteer_id=volunteer_id))
@@ -254,12 +280,13 @@ def create_task_specific_volunteer(organization_charity_campaign_id, volunteer_i
     organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
     referrer = request.referrer
     return render_template('create_task_campaign.jinja',
+                           form=form,
                            volunteer_id=volunteer_id,
                            campaign=organization_campaign,
                            referrer=referrer)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/tasks/evaluate/<int:task_id>', methods=['GET', 'POST'])
+@bp.route('/charity-campaign/<int:charity_campaign_id>/tasks/evaluate/<int:task_id>', methods=['GET', 'POST'])
 @roles_required(['organization'])
 def eval_task(charity_campaign_id, task_id):
     charity_campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -271,13 +298,20 @@ def eval_task(charity_campaign_id, task_id):
         flash('Task not found.', 'warning')
         return redirect(url_for('organization.manage_volunteers', charity_campaign_id=charity_campaign_id))
 
-    if request.method == 'POST':
+    status_translations = {
+        'completed': _('Completed'),
+        'ongoing': _('Ongoing'),
+        'rejected': _('Rejected')
+    }
+
+    form = EvaluateTaskForm()
+    if form.validate_on_submit():
         if task.status != 'completed':
             flash('You can only evaluate completed tasks!', 'warning')
             return redirect(url_for('organization.manage_volunteers', charity_campaign_id=charity_campaign_id))
         if not task.evaluation_:
-            score = request.form['score']
-            description = request.form['description']
+            score = form.score.data
+            description = form.description.data
             task_evaluation = Evaluation(score=score, description=description)
             task.evaluation_ = task_evaluation
             db.session.add(task)
@@ -295,10 +329,12 @@ def eval_task(charity_campaign_id, task_id):
                            task=task,
                            referrer=referrer,
                            charity_campaign_id=charity_campaign_id,
-                           volunteer_id=task.volunteer.id)
+                           volunteer_id=task.volunteer.id,
+                           status_translations=status_translations,
+                           form=form)
 
 
-@bp.route('/charity_campaign/<int:charity_campaign_id>/volunteer/<int:volunteer_id>/tasks')
+@bp.route('/charity-campaign/<int:charity_campaign_id>/volunteer/<int:volunteer_id>/tasks')
 @roles_required(['organization', 'authorities'])
 def view_volunteer_tasks(charity_campaign_id, volunteer_id):
     charity_campaign = db.session.get(OrganizationCharityCampaign, charity_campaign_id)
@@ -322,7 +358,7 @@ def view_volunteer_tasks(charity_campaign_id, volunteer_id):
                            status_translations=status_translations)
 
 
-@bp.route('/charity_campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/remove',
+@bp.route('/charity-campaign/<int:organization_charity_campaign_id>/volunteer/<int:volunteer_id>/remove',
           methods=['POST'])
 @roles_required(['organization'])
 def remove_volunteer(organization_charity_campaign_id, volunteer_id):
@@ -344,13 +380,23 @@ def remove_volunteer(organization_charity_campaign_id, volunteer_id):
 # =================== VOLUNTEERS ===================
 
 
-@bp.route('/volunteer_sign_to_charity_campaign', methods=['GET', 'POST'])
+@bp.route('/volunteer-sign-to-charity-campaign', methods=['GET', 'POST'])
 @roles_required(['volunteer'])
 def volunteer_sign_to_charity_campaign():
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))
+    form = VolunteerSignToCharityCampaignForm()
     if volunteer:
-        if request.method == 'POST':
-            organization_charity_campaign_id = request.form['organization_charity_campaign_id']
+        organization_charity_campaigns = db.session.scalars(
+            db.select(OrganizationCharityCampaign)
+            .where(~OrganizationCharityCampaign.volunteers.any(Volunteer.id == volunteer.id))
+        ).all()
+        form.organization_charity_campaign_id.choices = [
+            (campaign.id, f"{campaign.charity_campaign.name} ({campaign.organization.organization_name})")
+            for campaign in organization_charity_campaigns
+        ]
+
+        if form.validate_on_submit():
+            organization_charity_campaign_id = form.organization_charity_campaign_id.data
             organization_campaign = db.session.get(OrganizationCharityCampaign, organization_charity_campaign_id)
 
             if organization_campaign and volunteer:
@@ -360,16 +406,14 @@ def volunteer_sign_to_charity_campaign():
                 return redirect(url_for('organization.list_volunteer_charity_campaigns',
                                         charity_campaign_id=organization_charity_campaign_id))
 
-        organization_charity_campaigns = db.session.scalars(db.select(OrganizationCharityCampaign)).all()
-        organization_charity_campaigns = (
-            [campaign for campaign in organization_charity_campaigns if volunteer not in campaign.volunteers])
         return render_template('volunteer_sign_to_charity_campaign.jinja',
+                               form=form,
                                organization_charity_campaigns=organization_charity_campaigns)
     else:
         return abort(404)
 
 
-@bp.route('/volunteer/charity_campaigns', methods=['GET'])
+@bp.route('/volunteer/charity-campaigns', methods=['GET'])
 @roles_required(['volunteer'])
 def list_volunteer_charity_campaigns():
     volunteer = db.session.scalar(db.select(Volunteer).where(Volunteer.user_id == current_user.id))
@@ -383,7 +427,7 @@ def list_volunteer_charity_campaigns():
 # =================== SAMPLES ===================
 
 
-@bp.route('/add_sample_organization_charity_campaign')
+@bp.route('/add-sample-organization-charity-campaign')
 def add_sample_organization_charity_campaign():
     address1 = Address(street='Miejska', street_number='1a', city='Łódź', voivodeship='Łódzkie')
     authority1 = Authorities(name='Aleksander Wika', phone='758934576', approved=True, address=address1)

@@ -6,12 +6,25 @@
 <div class="container mt-4">
   <h2>{{ _("Choose your account type") }}</h2>
   <p>{{ _("Please select the type of account you want to create.") }}</p>
-  <ul>
-    <li><a href="{{ url_for('auth.register', user_type='volunteer') }}">{{ _("Register as Volunteer") }}</a></li>
-    <li><a href="{{ url_for('auth.register', user_type='organization') }}">{{ _("Register as Organization") }}</a></li>
-    <li><a href="{{ url_for('auth.register', user_type='donor') }}">{{ _("Register as Donor") }}</a></li>
-    <li><a href="{{ url_for('auth.register', user_type='affected') }}">{{ _("Register as Affected") }}</a></li>
-    <li><a href="{{ url_for('auth.register', user_type='authorities') }}">{{ _("Register as Authorities") }}</a></li>
-  </ul>
+  <br>
+  <a class="btn btn-secondary " href="{{ url_for('auth.register', user_type='volunteer') }}">
+    {{ _("Register as Volunteer") }}
+  </a>
+  <br>
+  <a class="btn btn-secondary mt-3" href="{{ url_for('auth.register', user_type='organization') }}">
+    {{ _("Register as Organization") }}
+  </a>
+  <br>
+  <a class="btn btn-secondary mt-3" href="{{ url_for('auth.register', user_type='donor') }}">
+    {{ _("Register as Donor") }}
+  </a>
+  <br>
+  <a class="btn btn-secondary mt-3" href="{{ url_for('auth.register', user_type='affected') }}">
+    {{ _("Register as Affected") }}
+  </a>
+  <br>
+  <a class="btn btn-secondary mt-3" href="{{ url_for('auth.register', user_type='authorities') }}">
+    {{ _("Register as Authorities") }}
+  </a>
 </div>
 {% endblock %}

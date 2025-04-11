@@ -1,76 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100" data-bs-theme="{{ session.get('theme', 'light') }}">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ _("Crisis Management System") }}{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <!-- Include Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  {% block script %}{% endblock %}
+  <title>{% block title %}{{ _("Crisis Management System") }}{% endblock %} | SKPH</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Font Awsome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <!-- SocketIO -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+  {% block script %}
+
+  {% endblock %}
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
   <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <a class="navbar-brand" href="{{ url_for('home') }}">SKPH</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
-        aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">SKPH</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+          aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-      <div class="collapse navbar-collapse" id="navbarColor01">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="{{ url_for('home') }}">{{ _("Home") }}
-              <span class="sr-only">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('organization.list_charity_campaigns') }}">{{ _("Campaigns") }}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('organization.list_organizations') }}">{{ _("Organizations")}}</a>
-          </li>
+        <div class="collapse navbar-collapse" id="navbarColor01">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="{{ url_for('home') }}">{{ _("Home") }}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('organization.list_charity_campaigns') }}">{{ _("Campaigns") }}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('organization.list_organizations') }}">{{ _("Organizations")}}</a>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('chat.chat') }}">
+                {{ _("Chat")}}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('maps.index') }}">
+                {{ _("Maps")}}
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+          <form action="{{ url_for('set_language') }}" method="post" class="d-flex ms-auto">
+            <div class="dropdown">
+              <button class="btn btn-dark dropdown-toggle mx-3" type="button" id="languageDropdown"
+                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-globe"></i> {{ _("Language") }}
+              </button>
+              <div class="dropdown-menu dropdown-menu-dark" aria-labelledby="languageDropdown">
+                <button type="submit" name="lang" value="en" class="dropdown-item">
+                  <img class="mx-2" src="{{ url_for('static', filename='flags/gb.svg') }}" alt="England-flag" width="20"
+                    height="20">
+                  English
+                </button>
+                <hr class="dropdown-divider">
+                <button type="submit" name="lang" value="pl" class="dropdown-item">
+                  <img class="mx-2" src="{{ url_for('static', filename='flags/pl.svg') }}" alt="Poland-flag" width="20"
+                    height="20">
+                  Polski
+                </button>
+              </div>
+            </div>
+          </form>
+          <button id="theme-toggle" class="btn btn-outline-secondary">
+            <i id="theme-icon" class="fas fa-moon"></i>
+          </button>
           {% if current_user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('chat.index') }}">{{ _("Chat")}}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('maps.index') }}">{{ _("Maps")}}</a>
-          </li>
-          {% endif %}
-          {# <li class="nav-item">
-            <a class="nav-link" href="#">{{ _("About") }}</a>
-          </li> #}
-        </ul>
-        <form action="{{ url_for('set_language') }}" method="post" class="form-inline my-2 my-lg-0">
           <div class="dropdown">
-            <button class="btn btn-link dropdown-toggle" type="button" id="languageDropdown" data-toggle="dropdown"
+            <button class="btn btn-dark dropdown-toggle mx-3" type="button" id="userDropdown" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
-              🌐 {{ _("Language") }}
+              <img
+                src="{{ url_for('static', filename='uploads/' ~ (current_user.profile_picture or 'base_profile_picture.jpg')) }}"
+                alt="Profile Picture" class="rounded-circle" width="40" height="40">
+              {{ current_user.email }}
             </button>
-            <div class="dropdown-menu" aria-labelledby="languageDropdown">
-              <button type="submit" name="lang" value="en" class="dropdown-item">🇬🇧 English</button>
-              <button type="submit" name="lang" value="pl" class="dropdown-item">🇵🇱 Polski</button>
+            <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
+              {% if current_user.type != "admin" %}
+              <a class="dropdown-item" href="{{ url_for('auth.profile') }}">{{ _("Profile") }}</a>
+              {% endif %}
+              {% if current_user.type == "admin" %}
+              <a class="dropdown-item" href="{{ url_for('auth.manage_users') }}">{{ _("Dashboard") }}</a>
+              {% endif %}
+              <hr class="dropdown-divider">
+              <a class="dropdown-item" href="{{ url_for('auth.logout') }}">{{ _("Logout") }}</a>
             </div>
           </div>
-        </form>
-        {% if current_user.is_authenticated %}
-        <div class="navbar-text mr-3">
-          {{ current_user.email }} ({{ current_user.type }})
+          <button type="button" class="btn btn-outline-info position-relative" data-bs-toggle="offcanvas"
+            data-bs-target="#offcanvasNotifications" aria-controls="offcanvasNotifications">
+            <i class="fa-regular fa-bell"></i>
+            <span id="notification-dot"
+              class="position-absolute top-0 start-100 translate-middle p-2 bg-danger rounded-circle"
+              style="display: none;">
+            </span>
+          </button>
+          {% else %}
+          <button type="button" class="btn btn-primary btn-sm ms-3"
+            onclick="window.location.href='{{ url_for('auth.login') }}'">{{ _('Login') }}</button>
+          {% endif %}
         </div>
-        {% if current_user.type != 'admin' %}
-        <button type="button" class="btn btn-primary btn-sm mr-2"
-          onclick="window.location.href='{{ url_for('auth.profile') }}'">{{ _('Profile') }}</button>
-        {% endif %}
-        <button type="button" class="btn btn-primary btn-sm"
-          onclick="window.location.href='{{ url_for('auth.logout') }}'">{{ _('Logout') }}</button>
-        {% else %}
-        <button type="button" class="btn btn-primary btn-sm"
-          onclick="window.location.href='{{ url_for('auth.login') }}'">{{ _('Login') }}</button>
-        {% endif %}
       </div>
     </nav>
   </header>
@@ -89,13 +130,207 @@
   {% endwith %}
 
   <main>
-    {% block content %} {% endblock %}
+    {% if referrer %}
+    <div class="mx-4">
+      <a href="{{ referrer }}" class="btn btn-secondary">
+        {{ _("Back") }}
+      </a>
+    </div>
+    {% endif %}
+    {% if current_user.is_authenticated %}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNotifications"
+      aria-labelledby="offcanvasNotificationsLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNotificationsLabel">{{ _("Notifications") }}</h5>
+        <button type="button" class="btn btn-outline-secondary ms-2" id="mark-all-read-btn">
+          {{ _("Mark All as Read") }}
+        </button>
+        <button type="button" class="btn btn-outline-primary ms-auto" id="fetch-notifications-btn">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul id="notification-list" class="list-group">
+          <li class="">XD</li>
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
   </main>
 
-  <!-- Include jQuery and Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <footer class="footer pb-3 mt-auto bg-dark text-white">
+    <div class="container-fluid text-center border-top border-danger border-3 border-primary-subtle pt-3">
+      <div class="row justify-content-around g-4">
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Emergency Contacts</h4>
+          <p class="mb-1">Emergency: 911</p>
+          <p class="mb-1">Hotline: 1-800-CRISIS</p>
+          <p class="mb-1">Support: help@crisis.org</p>
+        </div>
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Quick Links</h4>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">News & Updates</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">Training Resources</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h4 class="h5 mb-3">Resources</h4>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white-50 text-decoration-none">Emergency Plans</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">Documentation</a></li>
+            <li><a href="#" class="text-white-50 text-decoration-none">FAQs</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container text-center mt-4">
+      <span>&copy; 2025 SKPH. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
+      const htmlElement = document.documentElement;
+      const NotificationType = {
+        MESSAGE: 'message',
+        REQUEST: 'request',
+        TASK: 'task',
+        DONATION: 'donation'
+      };
+
+      if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+
+      themeToggle.addEventListener('click', function () {
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        fetch('{{ url_for("auth.set_theme") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({ theme: newTheme })
+        }).then(response => {
+          if (response.ok) {
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeIcon.classList.toggle('fa-moon');
+            themeIcon.classList.toggle('fa-sun');
+          }
+        });
+      });
+
+      function fetchNotifications() {
+        fetch('{{ url_for("notifications.get_unread_notifications") }}')
+          .then(response => response.json())
+          .then(data => {
+            const notificationList = document.getElementById("notification-list");
+            notificationList.innerHTML = '';
+            if (data.length > 0) {
+              data.forEach(notification => {
+                const newNotification = document.createElement("li");
+                newNotification.className = "list-group-item";
+                if (notification.type == NotificationType.MESSAGE) {
+                  newNotification.innerHTML = `<strong>{{ _("New message from") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
+                } else if (notification.type == NotificationType.DONATION) {
+                  newNotification.innerHTML = `<strong>{{ _("New donation") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
+                } else if (notification.type == NotificationType.REQUEST) {
+                  newNotification.innerHTML = `<strong>{{ _("New request") }}:</strong><br> ${notification.message} <small>${notification.timestamp}</small>`;
+                } else {
+                  newNotification.innerHTML = `${notification.message} <small>${notification.timestamp}</small>`;
+                }
+                notificationList.appendChild(newNotification);
+              });
+              document.getElementById("notification-dot").style.display = "block";
+            } else {
+              const noNotificationsMessage = document.createElement("li");
+              noNotificationsMessage.className = "list-group-item";
+              noNotificationsMessage.innerText = "{{ _('No notifications available') }}";
+              notificationList.appendChild(noNotificationsMessage);
+              document.getElementById("notification-dot").style.display = "none";
+            }
+          });
+      }
+
+      function markAllAsRead() {
+        fetch('{{ url_for("notifications.get_unread_notifications") }}')
+          .then(response => response.json())
+          .then(data => {
+            data.forEach(notification => {
+              const markAsReadUrlBase = "/notifications/mark_as_read/";
+
+              fetch(markAsReadUrlBase + notification.id, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                }
+              });
+            });
+
+            // Immediately update the UI
+            document.getElementById("notification-list").innerHTML = '';
+            document.getElementById("notification-dot").style.display = "none";
+          });
+      }
+
+      document.getElementById('fetch-notifications-btn').addEventListener('click', fetchNotifications);
+      document.getElementById('mark-all-read-btn').addEventListener('click', markAllAsRead);
+
+      fetchNotifications();
+
+      setInterval(fetchNotifications, 10000);
+    });
+  </script>
+  {% block ascript %}{% endblock %}
 </body>
+{# var currentUserEmail = "{{ current_user.email }}" || "user@skph.com";
+
+var socket = io();
+
+socket.on('connect', function () {
+socket.emit('request_user_email');
+});
+
+socket.on('request_user_email', function () {
+socket.emit('join_room', currentUserEmail);
+});
+
+socket.on('new_message', function (data) {
+console.log('There is a new message!!');
+if (data.receiver === currentUserEmail) {
+var notificationDot = document.getElementById("notification-dot");
+notificationDot.style.display = "block";
+
+var notificationList = document.getElementById("notification-list");
+var newNotification = document.createElement("li");
+newNotification.className = "list-group-item";
+newNotification.innerHTML = `New Message: <strong>${data.sender}</strong>: ${data.timestamp}`;
+notificationList.appendChild(newNotification);
+}
+}); #}
 
 </html>

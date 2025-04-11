@@ -1,0 +1,23 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ _("Remove TOTP") }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ _("Remove Two-Factor Authentication") }}</h1>
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="form-floating mb-3">
+                        {{ form.totp_code(class="form-control", placeholder="OTP Code") }}
+                        <label for="totp_code">{{ _("Enter OTP Code") }}</label>
+                    </div>
+                    <button type="submit" class="btn btn-danger">{{ _("Remove 2FA") }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

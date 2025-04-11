@@ -4,13 +4,6 @@
 
 {% block content %}
 <div class="container mt-2">
-    {% if referrer %}
-    <br>
-    <div>
-        <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Back") }}</a>
-    </div>
-    <hr class="my-4" />
-    {% endif %}
     <h3>{{ _("Your Tasks") }}</h3>
     {% if charity_campaign_id %}
     <table class="table table-hover table-bordered">
@@ -31,11 +24,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -47,9 +40,22 @@
                 </td>
                 <td>
                     {% if task.evaluation_ %}
-                    Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Score") }}</th>
+                                <th>{{ _("Description") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ task.evaluation_.score }}</td>
+                                <td>{{ task.evaluation_.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     {% else %}
-                    <span class="badge badge-info">{{ _("Not evaluated") }}</span>
+                    <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
                 </td>
             </tr>
@@ -74,11 +80,11 @@
                 <td>{{ task.description }}</td>
                 <td>
                     {% if task.status == 'completed' %}
-                    <span class="badge badge-success">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-success">{{ status_translations[task.status] }}</span>
                     {% elif task.status == 'rejected' %}
-                    <span class="badge badge-danger">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-danger">{{ status_translations[task.status] }}</span>
                     {% else %}
-                    <span class="badge badge-info">{{ status_translations[task.status] }}</span>
+                    <span class="badge text-bg-info">{{ status_translations[task.status] }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -90,9 +96,22 @@
                 </td>
                 <td>
                     {% if task.evaluation_ %}
-                    Score: {{ task.evaluation_.score }}<br />Description: {{ task.evaluation_.description }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{ _("Score") }}</th>
+                                <th>{{ _("Description") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ task.evaluation_.score }}</td>
+                                <td>{{ task.evaluation_.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     {% else %}
-                    <span class="badge badge-info">{{ _("Not evaluated") }}</span>
+                    <span class="badge text-bg-info">{{ _("Not evaluated") }}</span>
                     {% endif %}
                 </td>
             </tr>

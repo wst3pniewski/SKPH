@@ -1,29 +1,54 @@
-{% extends "base.jinja" %}
+{% extends "profile.jinja" %}
 
-{% block title %}{{ _("Authorities Details") }}{% endblock %}
-
-
-{% block content %}
-<div class="container mt-2">
-    <section>
-        <h2>{{ _("Personal Information") }}</h2>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>{{ _("Name:") }}</strong> {{ authorities.name }}</li>
-            <li class="list-group-item"><strong>{{ _("Phone:") }}</strong> {{ authorities.phone }}</li>
-            <li class="list-group-item"><strong>{{ _("Approved:") }}</strong>
-                {% if authorities.approved %}
-                <span class="badge badge-success">{{ _("Approved") }}</span>
-                {% else %}
-                <span class="badge badge-warning">{{ _("Not approved") }}</span>
-                {% endif %}
-            </li>
-            <li class="list-group-item"><strong>{{ _("Voivodeship:") }}</strong> {{ authorities.address.voivodeship }}
-            <li class="list-group-item"><strong>{{ _("City:") }}</strong> {{ authorities.address.city }}</li>
-            <li class="list-group-item"><strong>{{ _("Street:") }}</strong> {{ authorities.address.street }}</li>
-            <li class="list-group-item"><strong>{{ _("Street number:") }}</strong>
-                {{authorities.address.street_number}}
-            </li>
-        </ul>
-    </section>
+{% block approved %}
+{% if authorities.approved %}
+<span class="badge text-bg-success">{{ _("Approved") }}</span>
+{% else %}
+<span class="badge text-bg-warning">{{ _("Not approved") }}</span>
+{% endif %}
+{% endblock %}
+{% block specific_user_form %}
+<div class="row">
+    <div class="col-md-6">
+        <label class="form-label">{{ _("Name") }}</label>
+        <input type="text" class="form-control" value="{{ authorities.name }}" readonly>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">{{ _("Phone") }}</label>
+        <input type="tel" class="form-control" value="{{ authorities.phone }}" readonly>
+    </div>
+</div>
+<div class="row mt-3">
+    <h6 class="mb-3">{{ _("Address Details") }}</h6>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">{{ _("Street") }}</label>
+            <input type="text" class="form-control" value="{{ authorities.address.street }}" readonly>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">{{ _("Street Number") }}</label>
+            <input type="text" class="form-control" value="{{ authorities.address.street_number }}" readonly>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">{{ _("City") }}</label>
+            <input type="text" class="form-control" value="{{ authorities.address.city }}" readonly>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">{{ _("Voivodeship") }}</label>
+            <input type="text" class="form-control" value="{{ authorities.address.voivodeship }}" readonly>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">{{ _("ZIP Code") }}</label>
+            <input type="text" class="form-control" value="00-001" readonly>
+        </div>
+    </div>
+    {# <div class="row mt-3">
+        <h6 class="mb-3">{{ _("Description") }}</h6>
+        <div class="col-12">
+            <textarea class="form-control" readonly>{{ organization.description }}</textarea>
+        </div>
+    </div> #}
 </div>
 {% endblock %}

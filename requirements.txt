@@ -1,6 +1,7 @@
 # Core dependencies
 Flask == 3.0.3
 Flask-SQLAlchemy == 3.1.1
+Flask-Migrate==4.1.0
 flask-babel == 4.0.0
 Flask-Admin == 1.6.1
 psycopg2-binary == 2.9.10
@@ -15,6 +16,9 @@ itsdangerous~=2.2.0
 Flask-Mailman~=1.1.1
 Flask-WTF~=1.2.2
 email-validator~=2.2.0
+pyotp>=2.9.0
+qrcode[pil]>=8.0
+flask-hcaptcha>=0.7.2
 
 # Communication
 Flask-SocketIO==5.5.1
@@ -25,6 +29,19 @@ matplotlib==3.10.0
 
 # Real time chat
 flask-socketio == 5.5.1
+
 # Maps
 openrouteservice == 2.3.0
 geopy == 2.4.1
+
+# Monitoring
+
+# PDF
+fpdf2>=2.8.2
+
+# Plotting
+pandas>=2.2.3
+plotly>=6.0.0
+
+# Utils
+python-dotenv>=1.0.1

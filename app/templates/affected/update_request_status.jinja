@@ -6,18 +6,13 @@
 <div class="container mt-4">
   <h1>{{ _("Update Request Status") }}</h1>
   <form method="POST">
+    {{ form.hidden_tag() }}
     <div class="mb-3">
-      <label for="status" class="form-label">{{ _("Status") }}</label>
-      <select name="status" id="status" class="form-select" required>
-        {% for status in statuses %}
-        <option value="{{ status.name }}" {% if request.status==status %}selected{% endif %}>
-          {{ _(status.value) }}
-        </option>
-        {% endfor %}
-      </select>
+      {{ form.status.label(class="form-label") }}
+      {{ form.status(class="form-select") }}
     </div>
     <button type="submit" class="btn btn-success">{{ _("Update") }}</button>
-    <a href="{{ url_for('affected.all_requests') }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
+    <a href="{{ referrer }}" class="btn btn-secondary">{{ _("Cancel") }}</a>
   </form>
 </div>
 {% endblock %}

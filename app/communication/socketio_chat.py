@@ -1,9 +1,11 @@
+from flask import current_app as app
 from flask_socketio import SocketIO, emit, join_room
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
 from app.models.message import Message
 from app.models.user import User
+from app.models.notification import Notification, NotificationType
 
 socketio = SocketIO()
 
@@ -27,19 +29,35 @@ def handle_message(data):
                 content=message_content
             )
             db.session.add(new_message)
+
+            new_notification = Notification(
+                user_id=receiver.id,
+                message=f"{sender_email}",
+                type=NotificationType.MESSAGE
+            )
+
+            db.session.add(new_notification)
+
             db.session.commit()
 
             emit('receive_message', {
                 'sender': sender_email,
                 'receiver': receiver_email,
                 'message': message_content,
-                'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                'timestamp': new_message.timestamp.strftime('%H:%M %d-%m-%Y'),
+                'sender_profile_picture': sender.profile_picture
             }, room=room)
+
+            emit('new_message', {
+                'sender': sender_email,
+                'receiver': receiver_email,
+                'timestamp': new_message.timestamp.strftime('%H:%M %d-%m-%Y')
+            }, room=receiver_email)
         else:
-            print(f"Sender or receiver not found: {sender_email}, {receiver_email}")
+            app.logger.warning(f"Sender or receiver not found: {sender_email}, {receiver_email}")
     except SQLAlchemyError as e:
         db.session.rollback()
-        print(f"Error handling message: {e}")
+        app.logger.error(f"Error handling message: {e}")
 
 
 @socketio.on('join')
@@ -50,4 +68,18 @@ def on_join(data):
     if receiver:
         room = '_'.join(sorted([email, receiver]))
         join_room(room)
-        print(f"User {email} joined room {room}")
+        app.logger.info(f"User {email} joined room {room}")
+
+
+@socketio.on('join_room')
+def handle_join_room(user_email):
+    if user_email:
+        join_room(user_email)
+        app.logger.info(f"User {user_email} joined their personal room.")
+    else:
+        app.logger.error('No user email provided for joining room.')
+
+
+@socketio.on('connect')
+def handle_connect():
+    emit('request_user_email')

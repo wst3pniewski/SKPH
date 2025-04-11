@@ -14,6 +14,7 @@
         <th scope="col">{{ _("Authorities") }}</th>
         <th scope="col">{{ _("Campaigns") }}</th>
         <th scope="col">{{ _("Manage") }}</th>
+        <th scope="col">{{ _("Reports") }}</th>
         <th scope="col">{{ _("Status") }}</th>
       </tr>
     </thead>
@@ -41,10 +42,23 @@
           </a>
         </td>
         <td>
+          <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              {{ _("Reports") }}
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('reports.campaign_report', campaign_id=campaign.id) }}">{{
+                  _("Campaign
+                  Report") }}</a></li>
+            </ul>
+          </div>
+        </td>
+        <td>
           {% if campaign.is_active %}
-          <span class="badge badge-success">{{ _("Active") }}</span>
+          <span class="badge text-bg-success">{{ _("Active") }}</span>
           {% else %}
-          <span class="badge badge-warning">{{ _("Inactive") }}</span>
+          <span class="badge text-bg-warning">{{ _("Inactive") }}</span>
           {% endif %}
         </td>
       </tr>
